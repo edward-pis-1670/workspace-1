@@ -49,15 +49,6 @@ db.courses.hasMany(db.lectures, {
   as: "lectures",
 });
 
-db.courses.belongsTo(db.levels, {
-  as: "Course_Level",
-  foreignKey: "levelId",
-});
-
-db.levels.hasMany(db.courses, {
-  as: "Course_Level",
-  foreignKey: "levelId",
-});
 
 db.reviews.belongsTo(db.users, {
   foreignKey: "userId",
@@ -73,7 +64,7 @@ db.users.belongsToMany(db.courses, {
   foreignKey: "userId",
   through: "user_courses",
   timestamps: false,
-  as: "Student",
+  as: "mylearningcourses",
 });
 
 db.courses.belongsToMany(db.users, {

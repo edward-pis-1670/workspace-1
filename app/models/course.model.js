@@ -61,6 +61,10 @@ module.exports = (sequelize, Sequelize) => {
     willableto:{
       type: Sequelize.JSON,
       allowNull: true,
+    },
+    level:{
+      type:Sequelize.INTEGER,
+      defaultValue:0
     }
   });
   return course;

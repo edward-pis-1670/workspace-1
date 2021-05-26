@@ -83,8 +83,9 @@ exports.login = async (req, res) => {
     process.env.JWT_SECRET
   );
   res.send({
-    message: "welcome back",
+    code: 200,
     token: jwtToken,
+    user: userWithEmail,
   });
 };
 

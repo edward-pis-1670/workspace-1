@@ -24,7 +24,6 @@ exports.getCoursesHomepage = async (req, res) => {
       },
     });
     genre.courses = courses;
-    console.log(genre);
   }
 
   res.json({
