@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `fake_api` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `fake_api`;
 -- MySQL dump 10.13  Distrib 8.0.18, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: fake_api
@@ -64,7 +62,7 @@ CREATE TABLE `courses` (
 
 LOCK TABLES `courses` WRITE;
 /*!40000 ALTER TABLE `courses` DISABLE KEYS */;
-INSERT INTO `courses` VALUES (7,'Talking with foreiner','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:38:58','2021-05-17 11:38:58',1,1,NULL,1,'[]'),(8,'NodeJs','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:39:13','2021-05-17 11:39:13',1,2,NULL,1,'[]'),(9,'Angular','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:39:35','2021-05-17 11:39:35',1,1,2,1,'[]'),(10,'Fifa','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:51:28','2021-05-17 11:51:28',1,3,NULL,1,'[]');
+INSERT INTO `courses` VALUES (7,'Talking with foreiner','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:38:58','2021-05-17 11:38:58',1,1,83,1,'[]'),(8,'NodeJs','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:39:13','2021-05-17 11:39:13',1,2,77,1,'[]'),(9,'Angular','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:39:35','2021-05-17 11:39:35',1,1,77,1,'[]'),(10,'Fifa','Create Node apps that support user accounts and authentication1','https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg','Create real-time web sd applications',229,0,5,0,1,0,0,'[]','[]','2021-05-17 11:51:28','2021-05-17 11:51:28',1,3,83,1,'[]');
 /*!40000 ALTER TABLE `courses` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,7 +173,7 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (1,3,'Best explanation of if / else I found on the web. Awesome so far!','2021-05-17 09:59:37','2021-05-17 09:59:37',NULL,7),(2,3,'Great course! Very thorough and detailed explanations','2021-05-17 10:59:37','2021-05-17 10:59:37',2,7);
+INSERT INTO `reviews` VALUES (1,3,'Best explanation of if / else I found on the web. Awesome so far!','2021-05-17 09:59:37','2021-05-17 09:59:37',77,7),(2,3,'Great course! Very thorough and detailed explanations','2021-05-17 10:59:37','2021-05-17 10:59:37',77,7);
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -256,8 +254,10 @@ CREATE TABLE `users` (
   `creditbalance` int(11) DEFAULT '0',
   `createdAt` datetime DEFAULT NULL,
   `updatedAt` datetime DEFAULT NULL,
+  `verified` tinyint(1) DEFAULT '0',
+  `verifyToken` varchar(255) NOT NULL,
   PRIMARY KEY (`_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -266,7 +266,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (2,'hoaan','123456','hoa@gmail.com','photo2https://img-a.udemycdn.com/course/240x135/756914_8bd3_2.jpg',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-17 10:01:02','2021-05-17 10:01:02'),(3,'maixuanhoa','123hgt','hos234@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-21 13:43:35','2021-05-21 13:43:35'),(46,'husstDd','$2b$08$7W2JyFQ/0C6KxLk4TouvbOSzUfcZazAQVK9Wq359nbPthb/s4nthG','maixuanhoa1995@gmail.com',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-22 04:20:26','2021-05-22 04:20:26');
+INSERT INTO `users` VALUES (77,'c1','$2b$08$XNKmvAVyqjEnNl.Q9ym0h.8ebexG7Pu8askIUa23r3B/BWlSk2kOi','kowoxit901@isecv.com','https://img-a.udemycdn.com/course/240x135/888716_4225_3.jpg',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-24 10:33:13','2021-05-24 10:33:13',0,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOm51bGwsImVtYWlsIjoia293b3hpdDkwMUBpc2Vjdi5jb20iLCJpYXQiOjE2MjE4NTIzOTN9.uL0j_t59I5thxZSe6bzIbn8yyK0oiWVsHujCHYj8XmQ'),(83,'cz11','$2b$08$HQ.O.iaPXRhJGpOjWXkfY.E057a057p4vNVzn1SaPrPwptJ9KA7ii','pocaric607@rphinfo.com','https://img-a.udemycdn.com/course/240x135/888716_4225_3.jpg',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-24 13:03:18','2021-05-24 13:03:53',1,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOm51bGwsImVtYWlsIjoicG9jYXJpYzYwN0BycGhpbmZvLmNvbSIsImlhdCI6MTYyMTg2MTM5OH0.5VjZdNr30YWFQlv6XT9HNr0CcwTyOyEx9pemh9yIa_c'),(86,'C12','$2b$08$.VpU2Qo/NWRzhyGD8DDdRuiFqBkpxpzwQSFIsKk19cqZ/Ek84veHG','xafaxim837@sc2hub.com','https://img-a.udemycdn.com/course/240x135/888716_4225_3.jpg',NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'2021-05-26 00:51:14','2021-05-26 00:51:24',1,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOm51bGwsImVtYWlsIjoieGFmYXhpbTgzN0BzYzJodWIuY29tIiwiaWF0IjoxNjIxOTkwMjc0fQ.-KmRHk77H9XfalZbDaA10Hzz5NNr-6jWMWr-CKRp1qM');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -279,4 +279,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-05-22 16:50:35
+-- Dump completed on 2021-05-26 18:19:11
