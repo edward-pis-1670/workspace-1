@@ -24,6 +24,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     photo: {
       type: Sequelize.STRING,
+      defaultValue:"https://img-a.udemycdn.com/user/200_H/14214490_3956_2.jpg"
     },
     biography: {
       type: Sequelize.STRING,

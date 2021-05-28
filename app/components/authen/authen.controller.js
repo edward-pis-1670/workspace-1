@@ -47,7 +47,7 @@ exports.register = async (req, res) => {
           "<p>You have selected " +
           email +
           " as your new Academy account. To verify this email address belongs to you, click the link below and then sign in using your email and password.</p></br>" +
-          '<a href="http://localhost:5000/verify/' +
+          '<a href="http://localhost:5000/auth/verify/' +
           jwtToken +
           '">Verify now ></a></br></br>' +
           "<p>Academy Support</p>",
@@ -62,7 +62,7 @@ exports.register = async (req, res) => {
     })
     .catch((err) => res.json(err));
 
-  res.json(newUser);
+  res.json({message:"Register successfully"});
 };
 
 exports.login = async (req, res) => {
@@ -104,6 +104,15 @@ exports.verifyAccount = async (req, res) => {
     });
 };
 
+
+exports.logout = (req, res) => {
+  req.logout();
+  res.send({ code: 200 })
+}
+
+
+
+
 exports.forgotPassword = async (req, res, next) => {
   const account = await User.findOne({ where: { email: req.body.email } });
   if (account.verified == true) {
@@ -118,7 +127,7 @@ exports.forgotPassword = async (req, res, next) => {
         ",</p></br>" +
         "<p>A password reset for your account was requested.</p></br>" +
         "<p>Please check your email to reset password: <strong>" +
-        "<a href='http://localhost:5000/reset-password/" +
+        "<a href='http://localhost:5000/auth/reset-password/" +
         account.verifyToken +
         "'>Reset password Now ></a>" +
         "</strong></p></br></br>" +
