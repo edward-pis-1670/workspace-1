@@ -12,7 +12,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     description: {
       type: Sequelize.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     coverphoto: {
       type: Sequelize.STRING,
@@ -53,14 +53,17 @@ module.exports = (sequelize, Sequelize) => {
     targetstudent: {
       type: Sequelize.JSON,
       allowNull: true,
+      defaultValue: [],
     },
     needtoknow: {
       type: Sequelize.JSON,
       allowNull: true,
+      defaultValue: [],
     },
     willableto:{
       type: Sequelize.JSON,
       allowNull: true,
+      defaultValue: [],
     },
     level:{
       type:Sequelize.INTEGER,

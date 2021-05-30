@@ -14,7 +14,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       video: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       preview: {
         type: Sequelize.BOOLEAN,

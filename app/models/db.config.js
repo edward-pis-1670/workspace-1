@@ -24,10 +24,11 @@ db.sequelize = sequelize;
 db.courses = require("./course.model.js")(sequelize, Sequelize);
 db.subGenres = require("./subGenre.model.js")(sequelize, Sequelize);
 db.genres = require("./genre.model.js")(sequelize, Sequelize);
-db.levels = require("./level.model.js")(sequelize, Sequelize);
 db.users = require("./user.model.js")(sequelize, Sequelize);
 db.reviews = require("./review.model.js")(sequelize, Sequelize);
 db.lectures = require("./lecture.model.js")(sequelize, Sequelize);
+db.wishlists = require("./wishlist.model")(sequelize,Sequelize)
+db.userCourse = require('./user_course.model')(sequelize,Sequelize)
 
 db.genres.hasMany(db.subGenres, {
   foreignKey: "genreId",
@@ -41,7 +42,7 @@ db.subGenres.belongsTo(db.genres, {
 
 db.lectures.belongsTo(db.courses, {
   foreignKey: "courseId",
-  as: "lectures",
+  as: "lectures1",
 });
 
 db.courses.hasMany(db.lectures, {
@@ -74,14 +75,34 @@ db.courses.belongsToMany(db.users, {
   as: "Student",
 });
 
+db.users.belongsToMany(db.courses, {
+  foreignKey: "userId",
+  through: "wishlists",
+  timestamps: false,
+  as: "isWishlist",
+});
+
+db.courses.belongsToMany(db.users, {
+  foreignKey: "courseId",
+  through: "wishlists",
+  timestamps: false,
+  as: "mywishlist",
+});
+
+
+
 db.courses.belongsTo(db.subGenres, {
   foreignKey: "subGenreId",
   as: "subgenre",
+  ondelete:"CASCADE",
+  onupdate: "CASCADE"
 });
 
 db.subGenres.hasMany(db.courses, {
   foreignKey: "subGenreId",
   as: "subgenre",
+  ondelete:"CASCADE",
+  onupdate: "CASCADE"
 });
 
 db.courses.belongsTo(db.users, {
@@ -97,11 +118,15 @@ db.users.hasMany(db.courses, {
 db.genres.hasMany(db.courses, {
   foreignKey: "genreId",
   as: "genre",
+  ondelete:"CASCADE",
+  onupdate: "CASCADE"
 });
 
 db.courses.belongsTo(db.genres, {
   foreignKey: "genreId",
   as: "genre",
+  ondelete:"CASCADE",
+  onupdate: "CASCADE"
 });
 
 db.courses.hasMany(db.reviews, {
