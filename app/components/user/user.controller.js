@@ -7,7 +7,6 @@ const fs = require("fs");
 const { Op, Sequelize } = require("sequelize");
 
 exports.getMe = async (req, res) => {
-  throw 1;
   const user = await User.findOne({
     where: { _id: req.user._id },
     include: {
@@ -155,9 +154,6 @@ exports.takeACourses = async (req, res) => {
             parseFloat(config.TOTAL_PROFIT) +
             (course.cost * parseFloat(config.PROFIT_RATIO)) / 100.0;
           fs.writeFile("config.json", JSON.stringify(config), (err) => {});
-          // User.update({
-          //   increment: {numberofstudent: 1, revenue: course.cost}
-          // }, {where:{_id: req.body.courseid}})
           Course.increment(
             { numberofstudent: 1, revenue: course.cost },
             { where: { _id: req.body.courseid } }
@@ -172,53 +168,54 @@ exports.takeACourses = async (req, res) => {
 };
 
 exports.getMyWishlist = async (req, res) => {
-  //   let condition = {public: true };
-  // if (req.body.level) condition.level = req.body.level;
-  // if (req.body.free)
-  //   condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
-  // if (req.body.name) condition.name = { [Op.like]: "%" + req.body.name + "%" };
-  // let sort;
-  // if (!req.body.sort) sort = ["name", "ASC"];
-  // else {
-  //   switch (parseInt(req.body.sort)) {
-  //     case 1:
-  //       sort = ["name", "ASC"];
-  //       break;
-  //     case 2:
-  //       sort = ["name", "DESC"];
-  //       break;
-  //   }
-  // }
-
-  const wishlistIds = await Wishlist.findAll({
+  const wishlistId = [];
+  const ids = await Wishlist.findAll({
     where: { userId: req.user._id },
-    attributes: ["courseId"],
     raw: true,
   });
-  const promises = wishlistIds.map(async (wishlist) => {
-    const data = await Course.findOne({
-      where: { _id: wishlist.courseId },
-      include: {
-        model: User,
-        as: "lecturer",
-        attributes: ["_id", "username", "photo"],
-      },
-      attributes: [
-        "_id",
-        "name",
-        "coverphoto",
-        "cost",
-        "numberofstudent",
-        "numberofreviews",
-        "star",
-        "description",
-      ],
-    });
-    return data;
+  ids.map((id) => {
+    wishlistId.push(id.courseId);
   });
-  const courses = await Promise.all(promises);
+  // console.log(wishlistId)
 
-  res.json({ code: 200, courses });
+  let condition = { public: true };
+  condition._id = { [Op.in]: wishlistId };
+  if (req.body.level) condition.level = req.body.level;
+  if (req.body.free)
+    condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
+  if (req.body.name) condition.name = { [Op.like]: "%" + req.body.name + "%" };
+  let sort;
+  if (!req.body.sort) sort = ["name", "ASC"];
+  else {
+    switch (parseInt(req.body.sort)) {
+      case 1:
+        sort = ["name", "ASC"];
+        break;
+      case 2:
+        sort = ["name", "DESC"];
+        break;
+    }
+  }
+
+  const data = await Course.findAll({
+    where: condition,
+    include: {
+      model: User,
+      as: "lecturer",
+      attributes: ["_id", "username", "photo"],
+    },
+    attributes: [
+      "_id",
+      "name",
+      "coverphoto",
+      "cost",
+      "numberofstudent",
+      "numberofreviews",
+      "star",
+      "description",
+    ],
+  });
+  res.json({ code: 200, courses: data });
 };
 
 exports.getGoalsCourse = async (req, res) => {
