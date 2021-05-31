@@ -6,6 +6,16 @@ const UserRouter = require("./user/user.route");
 
 require("../middleware/passport");
 
+const catchError = async (func) => {
+  return async (req, res, next) => {
+    try {
+      await func(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
 function route(app) {
   app.use(passport.initialize());
   app.use("/courses", CourseRouter);

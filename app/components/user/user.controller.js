@@ -7,6 +7,7 @@ const fs = require("fs");
 const { Op, Sequelize } = require("sequelize");
 
 exports.getMe = async (req, res) => {
+  throw 1;
   const user = await User.findOne({
     where: { _id: req.user._id },
     include: {
@@ -134,7 +135,10 @@ exports.takeACourses = async (req, res) => {
             message: "The credit balance is not enough to make payments",
           });
         }
-        User.increment({ creditbalance: -course.cost},{where:{_id:req.user._id}})
+        User.increment(
+          { creditbalance: -course.cost },
+          { where: { _id: req.user._id } }
+        );
         // User.update({
         //   creditbalance: Sequelize.literal("creditbalance - course.cost"),
         // });
@@ -154,9 +158,12 @@ exports.takeACourses = async (req, res) => {
           // User.update({
           //   increment: {numberofstudent: 1, revenue: course.cost}
           // }, {where:{_id: req.body.courseid}})
-          Course.increment({numberofstudent: 1, revenue: course.cost}, {where:{ _id: req.body.courseid}})
+          Course.increment(
+            { numberofstudent: 1, revenue: course.cost },
+            { where: { _id: req.body.courseid } }
+          );
         });
-        res.send({ code: 200, message: 'success' })
+        res.send({ code: 200, message: "success" });
       })
       .catch((err) => {
         console.log(err);
@@ -183,15 +190,12 @@ exports.getMyWishlist = async (req, res) => {
   //   }
   // }
 
-  wishlistIds = await Wishlist.findAll({
+  const wishlistIds = await Wishlist.findAll({
     where: { userId: req.user._id },
     attributes: ["courseId"],
     raw: true,
   });
-  console.log(wishlistIds);
-  let mywishlistPromise = [];
   const promises = wishlistIds.map(async (wishlist) => {
-    console.log(wishlist);
     const data = await Course.findOne({
       where: { _id: wishlist.courseId },
       include: {
@@ -210,10 +214,9 @@ exports.getMyWishlist = async (req, res) => {
         "description",
       ],
     });
-    mywishlistPromise.push(data.dataValues);
-    return mywishlistPromise;
+    return data;
   });
-  const [courses] = await Promise.all(promises);
+  const courses = await Promise.all(promises);
 
   res.json({ code: 200, courses });
 };
@@ -229,7 +232,7 @@ exports.getGoalsCourse = async (req, res) => {
     code: 200,
     message: "success",
     course: {
-      _id: req.body.courseid,
+      _id: data._id,
       needtoknow: data.needtoknow,
       targetstudent: data.targetstudent,
       willableto: data.willableto,
@@ -248,7 +251,7 @@ exports.getCourse = async (req, res) => {
     code: 200,
     message: "success",
     course: {
-      _id: req.body.courseid,
+      _id: data._id,
       name: data.name,
       public: data.public,
       review: data.review,
@@ -272,7 +275,7 @@ exports.setGoalCourse = async (req, res) => {
         code: 200,
         message: "success",
         course: {
-          _id: req.body.courseid,
+          _id: Number(req.body.courseid),
           needtoknow: req.body.needtoknow,
           targetstudent: req.body.targetstudent,
           willableto: req.body.willableto,
@@ -297,7 +300,7 @@ exports.getCourseLectures = async (req, res) => {
     code: 200,
     message: "success",
     course: {
-      _id: req.body.courseid,
+      _id: data._id,
       lectures: data.lectures,
     },
   });
@@ -329,7 +332,7 @@ exports.uploadVideoLecture = async (req, res) => {
     code: 200,
     message: "success",
     lecture: {
-      _id: req.body.lectureid,
+      _id: Number(req.body.lectureid),
       video: "uploads/courses-video/" + req.file.filename,
     },
   });
@@ -344,7 +347,7 @@ exports.getDescription = async (req, res) => {
     code: 200,
     message: "success",
     course: {
-      _id: req.body.courseid,
+      _id: data._id,
       name: data.name,
       previewvideo: data.previewvideo,
       description: data.description,

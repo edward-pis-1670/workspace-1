@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
   const subGenre = sequelize.define(
-    "subGenres",
+    "subgenres",
     {
       _id: {
         type: Sequelize.INTEGER,

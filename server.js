@@ -13,9 +13,13 @@ app.get("/", (req, res) => {
   res.send({ ms: "Connect successfully" });
 });
 const db = require("./app/models/db.config");
-db.sequelize.sync();
 route(app);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log("SERVER IS RUNNING ON PORT 5000");
+});
+
+app.use(function (err, req, res, next) {
+  console.error(err);
+  res.status(500).send("Something broke!");
 });
