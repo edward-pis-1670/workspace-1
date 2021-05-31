@@ -17,10 +17,12 @@ const catchError = async (func) => {
 
 router.get("/me", controller.getMe);
 router.post("/learning", controller.getCourseByMe);
+router.post("/add-review", controller.addReview);
 router.get("/get-all-my-courses", controller.getAllMyCourses);
 router.post("/create-course", controller.createCourse);
 router.post("/take-a-course", controller.takeACourses);
 router.post("/wishlist", controller.getMyWishlist);
+router.post("/change-wishlist", controller.changeWishlist);
 router.post("/get-goals-course", controller.getGoalsCourse);
 router.post("/get-course", controller.getCourse);
 router.post("/set-goals-course", controller.setGoalCourse);

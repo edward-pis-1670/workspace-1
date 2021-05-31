@@ -3,6 +3,7 @@ const User = db.users;
 const Course = db.courses;
 const Wishlist = db.wishlists;
 const Lecture = db.lectures;
+const Review = db.reviews
 const fs = require("fs");
 const { Op, Sequelize } = require("sequelize");
 
@@ -214,9 +215,37 @@ exports.getMyWishlist = async (req, res) => {
       "star",
       "description",
     ],
+    limit: 3,
+    offset: (req.body.page || 1) * 3 - 3,
   });
   res.json({ code: 200, courses: data });
 };
+
+exports.changeWishlist = async (req, res) => {
+const data = await Wishlist.findOne({ where: {userId: req.user._id, courseId: req.body.courseid}})
+if(!data) {
+  await Wishlist.create({userId: req.user._id, courseId: req.body.courseid}).then(() => {
+    return res.send({ code: 200, message: 'success', action: 'add' })
+  })
+} else {
+  await Wishlist.destroy({where: {courseId: req.body.courseid}})
+  res.send({ code: 200, message: 'success', action: 'remove' })
+}
+// const [wishlisted, created] = await Wishlist.findOrCreate({
+//   where: {
+//     userId: req.user._id,
+//     courseId: req.body.courseid
+//   },
+//   defaults: {
+//     userId: req.user._id,
+//     courseId: req.body.courseid
+//   }
+// })
+// if(created) {
+//   await Wishlist.destroy({where: {courseId: req.body.courseid}}).then(() => res.send({ code: 200, message: 'success', action: 'remove' })).catch(err => res.send(err))
+// }
+}
+
 
 exports.getGoalsCourse = async (req, res) => {
   const data = await Course.findOne({
@@ -434,3 +463,19 @@ exports.publishCourse = async (req, res) => {
     course: { _id: req.body.courseid, review: true },
   });
 };
+
+
+exports.addReview = async (req, res) => {
+  await Review.create({
+    userId: req.user._id, courseId: req.body.courseid,star: req.body.star, content: req.body.content
+  })
+  await Course.findOne({_id: req.body.courseid}).then((data) =>{
+    let star = data.star ? parseFloat(data.star) : 0
+    let numberofreviews = data.numberofreviews ? parseInt(data.numberofreviews) : 0
+    star = (star * numberofreviews + parseInt(req.body.star)) / (numberofreviews + 1)
+    numberofreviews++
+    data.star = star
+    data.numberofreviews = numberofreviews
+    data.save()
+  }).catch(err =>console.log(err))
+}

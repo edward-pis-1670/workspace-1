@@ -29,6 +29,33 @@ db.reviews = require("./review.model.js")(sequelize, Sequelize);
 db.lectures = require("./lecture.model.js")(sequelize, Sequelize);
 db.wishlists = require("./wishlist.model")(sequelize,Sequelize)
 db.userCourse = require('./user_course.model')(sequelize,Sequelize)
+db.notifications = require('./notification.model')(sequelize,Sequelize)
+
+
+
+db.notifications.belongsTo(db.users,{
+  foreignKey: "senderId",
+  as:"sender"
+}) 
+
+
+db.users.hasMany(db.notifications,{
+  foreignKey: "senderId",
+  as:"sender"
+}) 
+
+
+db.notifications.belongsTo(db.users,{
+  foreignKey: "receiverId",
+  as:"receive"
+}) 
+
+
+db.users.hasMany(db.notifications,{
+  foreignKey: "receiverId",
+  as:"receive"
+}) 
+
 
 db.genres.hasMany(db.subGenres, {
   foreignKey: "genreId",

@@ -29,6 +29,10 @@ module.exports = (sequelize, Sequelize) => {
     biography: {
       type: Sequelize.STRING,
     },
+    role: {
+      type: Sequelize.INTEGER,
+      defaultValue: 0
+    },
     facebookid: {
       type: Sequelize.STRING,
       allowNull: true,
