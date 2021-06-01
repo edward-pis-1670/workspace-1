@@ -20,10 +20,8 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BOOLEAN,
             defaultValue: false
         },
-        preview: {
-          type: Sequelize.BOOLEAN,
-          allowNull: false,
-          defaultValue: true,
+        title: {
+          type: Sequelize.STRING,
         },
       },
       {

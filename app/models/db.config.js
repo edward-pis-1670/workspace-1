@@ -35,25 +35,25 @@ db.notifications = require('./notification.model')(sequelize,Sequelize)
 
 db.notifications.belongsTo(db.users,{
   foreignKey: "senderId",
-  as:"sender"
+  as:"from"
 }) 
 
 
 db.users.hasMany(db.notifications,{
   foreignKey: "senderId",
-  as:"sender"
+  as:"from"
 }) 
 
 
 db.notifications.belongsTo(db.users,{
   foreignKey: "receiverId",
-  as:"receive"
+  as:"to"
 }) 
 
 
 db.users.hasMany(db.notifications,{
   foreignKey: "receiverId",
-  as:"receive"
+  as:"to"
 }) 
 
 

@@ -1,6 +1,8 @@
 const db = require("../../models/db.config");
 const jwt = require("jsonwebtoken");
 const User = db.users;
+const Course = db.courses
+const Notification = db.notifications
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 
@@ -82,6 +84,10 @@ exports.login = async (req, res) => {
     { _id: userWithEmail._id, email: userWithEmail.email },
     process.env.JWT_SECRET
   );
+  const notis = await Notification.findAll({where: {receiverId:  userWithEmail._id}, include: {model:User, as: "from"},
+    limit: 4,
+  })
+  userWithEmail.dataValues.notis = notis
   res.send({
     code: 200,
     token: jwtToken,
