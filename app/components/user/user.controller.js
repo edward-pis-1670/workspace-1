@@ -143,9 +143,6 @@ exports.takeACourses = async (req, res) => {
           { creditbalance: -course.cost },
           { where: { _id: req.user._id } }
         );
-        // User.update({
-        //   creditbalance: Sequelize.literal("creditbalance - course.cost"),
-        // });
         fs.readFile("config.json", async (err, data) => {
           if (err) {
             console.log(err);
@@ -164,7 +161,7 @@ exports.takeACourses = async (req, res) => {
             receiverId: course.lecturer._id,
             title: "Conratulation",
             message:
-              req.user.username + " has enrolled in " + course.name + " course",
+              user.username + " has enrolled in " + course.name + " course",
               url:'/managecourse/' + req.body.courseid + '/goals',
           });
           Course.increment(
@@ -511,4 +508,9 @@ exports.getNotification = async (req, res) => {
     offset: (req.body.page || 1) *4 - 4,
   })
   res.send({ code: 200, notis: data})
+}
+
+
+exports.markReadNotification = async (req, res) => {
+  Notification.update({ seen: true}, {where: { _id: req.body.id}})
 }
