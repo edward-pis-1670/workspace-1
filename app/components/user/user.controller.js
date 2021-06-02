@@ -9,6 +9,14 @@ const fs = require("fs");
 const { Op, Sequelize } = require("sequelize");
 
 exports.getMe = async (req, res) => {
+  const wishlistId = [];
+  const ids = await Wishlist.findAll({
+    where: { userId: req.user._id },
+    raw: true,
+  });
+  ids.map((id) => {
+    wishlistId.push(id.courseId);
+  });
   const user = await User.findOne({
     where: { _id: req.user._id },
     include: {
@@ -17,12 +25,17 @@ exports.getMe = async (req, res) => {
       attributes: ["_id"],
     },
   });
-  const notis = await Notification.findAll({where: {receiverId: req.user._id},
+
+  const notis = await Notification.findAll({
+    where: { receiverId: req.user._id },
+    include: { model: User, as: "from" ,attributes: ["photo", "_id"],},
+    
     limit: 4,
-  })
-  user.dataValues.notis = notis
+  });
+  user.dataValues.notis = notis;
+  user.dataValues.mywishlist = wishlistId;
   res.send({
-    user:user,
+    user: user,
     code: 200,
     message: "success",
   });
@@ -162,7 +175,7 @@ exports.takeACourses = async (req, res) => {
             title: "Conratulation",
             message:
               user.username + " has enrolled in " + course.name + " course",
-              url:'/managecourse/' + req.body.courseid + '/goals',
+            url: "/managecourse/" + req.body.courseid + "/goals",
           });
           Course.increment(
             { numberofstudent: 1, revenue: course.cost },
@@ -245,19 +258,6 @@ exports.changeWishlist = async (req, res) => {
     await Wishlist.destroy({ where: { courseId: req.body.courseid } });
     res.send({ code: 200, message: "success", action: "remove" });
   }
-  // const [wishlisted, created] = await Wishlist.findOrCreate({
-  //   where: {
-  //     userId: req.user._id,
-  //     courseId: req.body.courseid
-  //   },
-  //   defaults: {
-  //     userId: req.user._id,
-  //     courseId: req.body.courseid
-  //   }
-  // })
-  // if(created) {
-  //   await Wishlist.destroy({where: {courseId: req.body.courseid}}).then(() => res.send({ code: 200, message: 'success', action: 'remove' })).catch(err => res.send(err))
-  // }
 };
 
 exports.getGoalsCourse = async (req, res) => {
@@ -484,8 +484,12 @@ exports.addReview = async (req, res) => {
     star: req.body.star,
     content: req.body.content,
   });
-  await Course.findOne({ _id: req.body.courseid })
-    .then((data) => {
+  const user = await User.findOne({ _id: req.user._id });
+  await Course.findOne({
+    where: { _id: req.body.courseid },
+    include: { model: User, as: "lecturer" },
+  })
+    .then(async (data) => {
       let star = data.star ? parseFloat(data.star) : 0;
       let numberofreviews = data.numberofreviews
         ? parseInt(data.numberofreviews)
@@ -497,20 +501,33 @@ exports.addReview = async (req, res) => {
       data.star = star;
       data.numberofreviews = numberofreviews;
       data.save();
+      await Notification.create({
+        senderId: req.user._id,
+        receiverId: data.lecturer._id,
+        title: req.body.star + " star!",
+        message: user.username + " has reviewed in " + data.name + " course",
+        url: "/managecourse/" + req.body.courseid + "/goals",
+      });
+      res.send({ code: 200, message: "success" });
     })
     .catch((err) => console.log(err));
 };
 
-
 exports.getNotification = async (req, res) => {
-  const data = await Notification.findAll({where: {receiverId: req.user._id},
+  const data = await Notification.findAll({
+    where: { receiverId: req.user._id },
     limit: 4,
-    offset: (req.body.page || 1) *4 - 4,
-  })
-  res.send({ code: 200, notis: data})
-}
-
+    offset: (req.body.page || 1) * 4 - 4,
+  });
+  res.send({ code: 200, notis: data });
+};
 
 exports.markReadNotification = async (req, res) => {
-  Notification.update({ seen: true}, {where: { _id: req.body.id}})
+  Notification.update({ seen: true }, { where: { _id: req.body.id } });
+};
+
+
+exports.deleteVideoLectures = async (req, res) => {
+  await Lecture.destroy({where:{ _id: req.body.lectureid }})
+  res.send({ code: 200, message: 'success' })
 }

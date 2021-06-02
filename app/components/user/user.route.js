@@ -43,6 +43,7 @@ router.post(
 );
 router.post("/set-price-course", controller.setPriceCourse);
 router.post("/delete-course", controller.deleteCourse);
+router.post("/delete-video-lectures", controller.deleteVideoLectures);
 router.post("/publish-course", controller.publishCourse);
 
 module.exports = router;
