@@ -3,6 +3,7 @@ const controller = require("./user.controller");
 const router = express.Router();
 const multer = require("multer");
 const uploadcoursevideo = multer({ dest: "uploads/courses-video" });
+// const uploadcoursevideo = multer({ storage: multer.memoryStorage(), limits:{fileSize: 5*1024*1024}});
 var uploadcoursephoto = multer({ dest: "public/uploads/courses-photo" });
 
 const catchError = async (func) => {

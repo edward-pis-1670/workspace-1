@@ -5,8 +5,12 @@ const Wishlist = db.wishlists;
 const Lecture = db.lectures;
 const Review = db.reviews;
 const Notification = db.notifications;
+const uuid = require("uuid");
+const uuidv1 = uuid.v1;
 const fs = require("fs");
+const multer = require("multer");
 const { Op, Sequelize } = require("sequelize");
+const upload = require("../../services/googleStorage.service");
 
 exports.getMe = async (req, res) => {
   const wishlistId = [];
@@ -28,7 +32,7 @@ exports.getMe = async (req, res) => {
 
   const notis = await Notification.findAll({
     where: { receiverId: req.user._id },
-    include: { model: User, as: "from", attributes: ["photo", "_id"], },
+    include: { model: User, as: "from", attributes: ["photo", "_id"] },
 
     limit: 4,
   });
@@ -168,7 +172,7 @@ exports.takeACourses = async (req, res) => {
           config.TOTAL_PROFIT =
             parseFloat(config.TOTAL_PROFIT) +
             (course.cost * parseFloat(config.PROFIT_RATIO)) / 100.0;
-          fs.writeFile("config.json", JSON.stringify(config), (err) => { });
+          fs.writeFile("config.json", JSON.stringify(config), (err) => {});
           await Notification.create({
             senderId: req.user._id,
             receiverId: course.lecturer._id,
@@ -357,15 +361,20 @@ exports.addVideoLectures = async (req, res) => {
   });
 };
 
-exports.uploadVideoLecture = async (req, res) => {
+exports.uploadVideoLecture = async (req, res, next) => {
   const data = await Lecture.update(
     {
       video: "uploads/courses-video/" + req.file.filename,
     },
     { where: { _id: req.body.lectureid } }
   );
+  const newFileName = uuidv1() + "-" + req.file.filename;
+  upload
+    .file(`${newFileName}.mp4`)
+    .save(fs.readFileSync(`uploads/courses-video/${req.file.filename}`))
+    .then(console.log);
   if (data.video) {
-    fs.unlink(lecture.video, (err) => { });
+    fs.unlink(lecture.video, (err) => {});
   }
   return res.send({
     code: 200,
@@ -378,17 +387,27 @@ exports.uploadVideoLecture = async (req, res) => {
 };
 
 exports.setNameLecture = async (req, res) => {
-  const data = await Lecture.update({name: req.body.name}, {where:{_id:req.body.lectureid}})
-  return res.send({ code: 200, message: "success", lecture: {_id: req.body.lectureid, name: req.body.name}})
-}
+  const data = await Lecture.update(
+    { name: req.body.name },
+    { where: { _id: req.body.lectureid } }
+  );
+  return res.send({
+    code: 200,
+    message: "success",
+    lecture: { _id: req.body.lectureid, name: req.body.name },
+  });
+};
 
 exports.changePreview = async (req, res) => {
-  const data = await Lecture.findOne({where:{_id:req.body.lectureid}})
-  data.preview = !data.preview
-  data.save()
-  return res.send({code: 200, message: "success", lecture: {_id: req.body.lectureid, preview: data.preview}})
-}
-
+  const data = await Lecture.findOne({ where: { _id: req.body.lectureid } });
+  data.preview = !data.preview;
+  data.save();
+  return res.send({
+    code: 200,
+    message: "success",
+    lecture: { _id: req.body.lectureid, preview: data.preview },
+  });
+};
 
 exports.getDescription = async (req, res) => {
   const data = await Course.findOne({ where: { _id: req.body.courseid } });
@@ -426,7 +445,7 @@ exports.setDescription = async (req, res, next) => {
   if (req.file) {
     let oldPhoto = course.coverphoto;
     if (oldPhoto.substring(1, 8) == "uploads") {
-      fs.unlink("public" + oldPhoto, (err) => { });
+      fs.unlink("public" + oldPhoto, (err) => {});
     }
   }
   return res.send({
@@ -434,23 +453,23 @@ exports.setDescription = async (req, res, next) => {
     message: "success",
     course: req.file
       ? {
-        _id: req.body.courseid,
-        name: req.body.name,
-        description: req.body.description,
-        coverphoto: "/uploads/courses-photo/" + req.file.filename,
-        genre: req.body.genre,
-        subgenre: req.body.subgenre,
-        level: req.body.level,
-      }
+          _id: req.body.courseid,
+          name: req.body.name,
+          description: req.body.description,
+          coverphoto: "/uploads/courses-photo/" + req.file.filename,
+          genre: req.body.genre,
+          subgenre: req.body.subgenre,
+          level: req.body.level,
+        }
       : {
-        _id: req.body.courseid,
-        name: req.body.name,
-        description: req.body.description,
-        coverphoto: course.coverphoto,
-        genre: req.body.genre,
-        subgenre: req.body.subgenre,
-        level: req.body.level,
-      },
+          _id: req.body.courseid,
+          name: req.body.name,
+          description: req.body.description,
+          coverphoto: course.coverphoto,
+          genre: req.body.genre,
+          subgenre: req.body.subgenre,
+          level: req.body.level,
+        },
   });
 };
 
@@ -539,8 +558,7 @@ exports.markReadNotification = async (req, res) => {
   Notification.update({ seen: true }, { where: { _id: req.body.id } });
 };
 
-
 exports.deleteVideoLectures = async (req, res) => {
-  await Lecture.destroy({ where: { _id: req.body.lectureid } })
-  res.send({ code: 200, message: 'success' })
-}
+  await Lecture.destroy({ where: { _id: req.body.lectureid } });
+  res.send({ code: 200, message: "success" });
+};
