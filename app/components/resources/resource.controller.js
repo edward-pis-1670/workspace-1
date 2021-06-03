@@ -8,7 +8,6 @@ exports.playVideoLectures = async (req, res) => {
 //     return res.end();
 //   }
 await Lecture.findOne({ _id: req.params.lectureid }).then((lecture) => {
-console.log(lecture.video)
     return send(req, lecture.video).pipe(res);
 }).catch((err) =>console.log(err))
 };

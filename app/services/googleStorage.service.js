@@ -3,11 +3,11 @@ const fs = require("fs");
 const { Storage } = require("@google-cloud/storage");
 
 const storage = new Storage({
-    projectId: process.env.GCS_PROJECT_ID, credentials:{client_email:process.env.GCS_CLIENT_EMAIL, privateKey:process.env.GCS_PRIVATE_KEY}
+    projectId: process.env.GCS_PROJECT_ID, credentials:{client_email:process.env.GCS_CLIENT_EMAIL, private_key:process.env.GCS_PRIVATE_KEY}
 });
 
 storage
-  .bucket("fake-api-video-course")
+  .bucket(process.env.GCS_BUCKET_NAME)
   .file("asdadasd.png")
-  .save(fs.readFileSync("Screenshot from 2021-04-20 19-58-53.png"))
+  .save(fs.readFileSync("cpanel.jpg"))
   .then(console.log);

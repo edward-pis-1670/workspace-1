@@ -30,6 +30,8 @@ router.post("/get-course", controller.getCourse);
 router.post("/set-goals-course", controller.setGoalCourse);
 router.post("/get-lectures-course", controller.getCourseLectures);
 router.post("/add-video-lecture", controller.addVideoLectures);
+router.post("/set-name-lecture", controller.setNameLecture);
+router.post("/change-preview-lecture", controller.changePreview);
 router.post(
   "/upload-video-lecture",
   uploadcoursevideo.single("video"),
