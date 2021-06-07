@@ -8,8 +8,8 @@ const Notification = db.notifications;
 const uuid = require("uuid");
 const uuidv1 = uuid.v1;
 const fs = require("fs");
-const multer = require("multer");
 const { Op, Sequelize } = require("sequelize");
+const { format } = require("util");
 const upload = require("../../services/googleStorage.service");
 
 exports.getMe = async (req, res) => {
@@ -362,28 +362,52 @@ exports.addVideoLectures = async (req, res) => {
 };
 
 exports.uploadVideoLecture = async (req, res, next) => {
-  const data = await Lecture.update(
-    {
-      video: "uploads/courses-video/" + req.file.filename,
-    },
-    { where: { _id: req.body.lectureid } }
-  );
-  const newFileName = uuidv1() + "-" + req.file.filename;
-  upload
-    .file(`${newFileName}.mp4`)
-    .save(fs.readFileSync(`uploads/courses-video/${req.file.filename}`))
-    .then(console.log);
-  if (data.video) {
-    fs.unlink(lecture.video, (err) => {});
+  // if (data.video) {
+  //   fs.unlink(lecture.video, (err) => {});
+  // }
+  // upload
+  //   .file(`${newFileName}.mp4`)
+  //   .save(fs.readFileSync(`uploads/courses-video/${req.file.filename}`))
+  //   .then(console.log);
+  // const publicURL = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${newFileName}.mp4`
+  // Create a new blob in the bucket and upload the file data.
+  if (!req.file) {
+    res.status(400).send('No file uploaded.');
+    return;
   }
-  return res.send({
-    code: 200,
-    message: "success",
-    lecture: {
-      _id: Number(req.body.lectureid),
-      video: "uploads/courses-video/" + req.file.filename,
-    },
+  const newFileName = uuidv1() + "-" + req.file.originalname;
+  const blob = upload.file(`course-videos/${newFileName}`);
+  const blobStream = blob.createWriteStream({
+    resumable: false,
   });
+
+  blobStream.on("error", (err) => {
+    next(err);
+  });
+
+  blobStream.on("finish", () => {
+    // The public URL can be used to directly access the file via HTTP.
+    const publicUrl = format(
+      `https://storage.googleapis.com/${upload.name}/${blob.name}`
+    );
+    const data = Lecture.update(
+      {
+        // video: "uploads/courses-video/" + req.file.filename,
+        video: publicUrl,
+      },
+      { where: { _id: req.body.lectureid } }
+    );
+    return res.send({
+      code: 200,
+      message: "success",
+      lecture: {
+        _id: req.body.lectureid,
+        video: data.video,
+      },
+    });
+  });
+
+  blobStream.end(req.file.buffer);
 };
 
 exports.setNameLecture = async (req, res) => {
