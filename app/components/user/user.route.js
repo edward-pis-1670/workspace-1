@@ -9,6 +9,7 @@ const uploadcoursevideo = multer({
     fileSize: 5 * 1024 * 1024,
   },
 });
+
 var uploadcoursephoto = multer({ dest: "public/uploads/courses-photo" });
 
 const catchError = async (func) => {
@@ -38,6 +39,12 @@ router.post("/get-lectures-course", controller.getCourseLectures);
 router.post("/add-video-lecture", controller.addVideoLectures);
 router.post("/set-name-lecture", controller.setNameLecture);
 router.post("/change-preview-lecture", controller.changePreview);
+
+router.post(
+  "/upload-previewvideo-lecture",
+  uploadcoursevideo.single("video"),
+  controller.uploadVideoPreview
+);
 router.post(
   "/upload-video-lecture",
   uploadcoursevideo.single("video"),

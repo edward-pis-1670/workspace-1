@@ -372,7 +372,7 @@ exports.uploadVideoLecture = async (req, res, next) => {
   // const publicURL = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${newFileName}.mp4`
   // Create a new blob in the bucket and upload the file data.
   if (!req.file) {
-    res.status(400).send('No file uploaded.');
+    res.status(400).send("No file uploaded.");
     return;
   }
   const newFileName = uuidv1() + "-" + req.file.originalname;
@@ -410,6 +410,42 @@ exports.uploadVideoLecture = async (req, res, next) => {
   blobStream.end(req.file.buffer);
 };
 
+exports.uploadVideoPreview = async (req, res, next) => {
+  if (!req.file) {
+    res.status(400).send("No file uploaded.");
+    return;
+  }
+  const videoPreviewName = uuidv1() + "-" + req.file.originalname;
+  const blob = upload.file(`course-preview-videos/${videoPreviewName}`);
+  const blobStream = blob.createWriteStream({
+    resumable: false,
+  });
+
+  blobStream.on("error", (err) => {
+    next(err);
+  });
+
+  blobStream.on("finish", () => {
+    // The public URL can be used to directly access the file via HTTP.
+    const publicPreviewUrl = format(
+      `https://storage.googleapis.com/${upload.name}/${blob.name}`
+    );
+    const data = Course.update(
+      {
+        // video: "uploads/courses-video/" + req.file.filename,
+        previewvideo: publicPreviewUrl,
+      },
+      { where: { _id: req.body.courseid } }
+    );
+    return res.send({
+      code: 200,
+      message: "success",
+      previewvideo: data.previewvideo,
+    });
+  });
+  blobStream.end(req.file.buffer);
+
+};
 exports.setNameLecture = async (req, res) => {
   const data = await Lecture.update(
     { name: req.body.name },
