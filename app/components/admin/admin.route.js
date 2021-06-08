@@ -7,5 +7,6 @@ router.post('/get-users', controller.getUsersByAdmin)
 router.post('/get-reviews-course', controller.getReviewsCourseByAdmin)
 router.post('/edit-user', controller.editUserByAdmin)
 router.post('/delete-user', controller.deleteUserByAdmin)
+router.post('/accept-course', controller.acceptCourseByAdmin)
 
 module.exports = router

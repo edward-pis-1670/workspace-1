@@ -121,3 +121,8 @@ exports.deleteUserByAdmin = async (req, res) => {
 await User.destroy({where:{_id:req.body._id}})
 res.send({code:200})
 }
+
+exports.acceptCourseByAdmin = async (req, res) => {
+  await Course.update({review:false, public:true}, {where:{_id:req.body._id}})
+  res.send({code:200})
+}
