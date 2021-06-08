@@ -255,7 +255,7 @@ exports.searchCourse = async (req, res) => {
   if (req.body.level) condition.level = req.body.level;
   if (req.body.free)
     condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
-  if (req.body.name) condition.name = { [Op.like]: "%" + req.body.name + "%" };
+  if (req.body.name) condition.name = { [Op.substring]: "%" + req.body.name + "%" };
   let sort;
   if (!req.body.sort) sort = ["numberofstudent", "DESC"];
   else {

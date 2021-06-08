@@ -84,10 +84,6 @@ exports.login = async (req, res) => {
     { _id: userWithEmail._id, email: userWithEmail.email },
     process.env.JWT_SECRET
   );
-  // const notis = await Notification.findAll({where: {receiverId:  userWithEmail._id}, include: {model:User, as: "from", attributes:["photo", "_id"]},
-  //   limit: 4,
-  // })
-  // userWithEmail.dataValues.notis = notis //something was incorrect
   res.send({
     code: 200,
     token: jwtToken,

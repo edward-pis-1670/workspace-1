@@ -210,7 +210,7 @@ exports.getMyWishlist = async (req, res) => {
   if (req.body.level) condition.level = req.body.level;
   if (req.body.free)
     condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
-  if (req.body.name) condition.name = { [Op.like]: "%" + req.body.name + "%" };
+  if (req.body.name) condition.name = { [Op.substring]: "%" + req.body.name + "%" };
   let sort;
   if (!req.body.sort) sort = ["name", "ASC"];
   else {
@@ -444,7 +444,6 @@ exports.uploadVideoPreview = async (req, res, next) => {
     });
   });
   blobStream.end(req.file.buffer);
-
 };
 exports.setNameLecture = async (req, res) => {
   const data = await Lecture.update(
@@ -504,10 +503,6 @@ exports.setDescription = async (req, res, next) => {
   // });
 
   // upload photo
-  if (!req.file) {
-    res.status(400).send("No file uploaded.");
-    return;
-  }
   const photoName = uuidv1() + "-" + req.file.originalname;
   const blob = upload.file(`course-photos/${photoName}`);
   const blobStream = blob.createWriteStream({
@@ -530,9 +525,8 @@ exports.setDescription = async (req, res, next) => {
         description: req.body.description,
         name: req.body.name,
         level: req.body.level,
-        genre : req.body.genre,
-        subgenre: req.body.subgenre
-
+        genre: req.body.genre,
+        subgenre: req.body.subgenre,
       },
       { where: { _id: req.body.courseid } }
     );
@@ -540,24 +534,24 @@ exports.setDescription = async (req, res, next) => {
       code: 200,
       message: "success",
       course: req.file
-      ? {
-          _id: req.body.courseid,
-          name: req.body.name,
-          description: req.body.description,
-          coverphoto: data.coverphoto,
-          genre: req.body.genre,
-          subgenre: req.body.subgenre,
-          level: req.body.level,
-        }
-      : {
-          _id: req.body.courseid,
-          name: req.body.name,
-          description: req.body.description,
-          coverphoto: course.coverphoto,
-          genre: req.body.genre,
-          subgenre: req.body.subgenre,
-          level: req.body.level,
-        },
+        ? {
+            _id: req.body.courseid,
+            name: req.body.name,
+            description: req.body.description,
+            coverphoto: data.coverphoto,
+            genre: req.body.genre,
+            subgenre: req.body.subgenre,
+            level: req.body.level,
+          }
+        : {
+            _id: req.body.courseid,
+            name: req.body.name,
+            description: req.body.description,
+            coverphoto: course.coverphoto,
+            genre: req.body.genre,
+            subgenre: req.body.subgenre,
+            level: req.body.level,
+          },
     });
   });
   blobStream.end(req.file.buffer);
@@ -653,19 +647,21 @@ exports.deleteVideoLectures = async (req, res) => {
   res.send({ code: 200, message: "success" });
 };
 
-
 exports.editProfile = async (req, res) => {
-  const {username, biography, website, twitter, youtube, linkedin} = req.body
-  await User.update({username, biography, website, twitter, youtube, linkedin} , { where: { _id: req.user._id}})
-  res.send({code: 200, message:"success", profile: req.body})
-}
+  const { username, biography, website, twitter, youtube, linkedin } = req.body;
+  await User.update(
+    { username, biography, website, twitter, youtube, linkedin },
+    { where: { _id: req.user._id } }
+  );
+  res.send({ code: 200, message: "success", profile: req.body });
+};
 
 exports.editAvatar = async (req, res) => {
   if (!req.file) {
     res.status(400).send("No file uploaded.");
     return;
   }
-  const  avatarName = uuidv1() + "-" + req.file.originalname;
+  const avatarName = uuidv1() + "-" + req.file.originalname;
   const blob = upload.file(`course-avatar/${avatarName}`);
   const blobStream = blob.createWriteStream({
     resumable: false,
@@ -675,22 +671,22 @@ exports.editAvatar = async (req, res) => {
     next(err);
   });
 
-  blobStream.on("finish",async () => {
+  blobStream.on("finish", async () => {
     // The public URL can be used to directly access the file via HTTP.
     const publicAvatarURL = format(
       `https://storage.googleapis.com/${upload.name}/${blob.name}`
     );
-    const data =await User.update(
+    const data = await User.update(
       {
-        photo: publicAvatarURL
+        photo: publicAvatarURL,
       },
       { where: { _id: req.user._id } }
     );
     return res.send({
       code: 200,
       message: "success",
-      photo: data.photo
+      photo: data.photo,
     });
   });
   blobStream.end(req.file.buffer);
-}
+};
