@@ -69,39 +69,39 @@ exports.getUsersByAdmin = async (req, res, next) => {
   res.send({ code: 200, users: data });
 };
 
-// exports.getReviewsCourseByAdmin = async (req, res, next) => {
-//   let condition = { review: true };
-//   if (req.body.searchQuery) {
-//     condition.name = {
-//       [Op.substring]: "%" + req.body.searchQuery + "%",
-//     };
-//   }
-//   let sort = [];
-//   if (!req.body.sort) sort = ["name", "ASC"];
-//   else {
-//     switch (parseInt(req.body.sort)) {
-//       case 1:
-//         sort = ["name", "ASC"];
-//         break;
-//       case 2:
-//         sort = ["name", "DESC"];
-//         break;
-//     }
-//   }
-//   const data = await Course.findAll({
-//     where: condition,
-//     include: [
-//       { model: User, as: "lecturer", attributes: ["_id", "username"] },
-//       { model: Genre, as: "genre" , attributes: ["_id", "name"]},
-//       { model: Subgenre, as: "subgenre",attributes: ["_id", "name"] },
-//       { model: Lecture, as: "lectures", attributes: ["_id", "name"] },
-//     ],
-//     limit: 8,
-//     order: [sort],
-//     offset: (req.body.page || 1) * 8 - 8,
-//   });
-//   res.send({code: 200, courses: data})
-// };
+exports.getReviewsCourseByAdmin = async (req, res, next) => {
+  let condition = { review: true };
+  if (req.body.searchQuery) {
+    condition.name = {
+      [Op.substring]: "%" + req.body.searchQuery + "%",
+    };
+  }
+  let sort = [];
+  if (!req.body.sort) sort = ["name", "ASC"];
+  else {
+    switch (parseInt(req.body.sort)) {
+      case 1:
+        sort = ["name", "ASC"];
+        break;
+      case 2:
+        sort = ["name", "DESC"];
+        break;
+    }
+  }
+  const data = await Course.findAll({
+    where: condition,
+    include: [
+      { model: User, as: "lecturer", attributes: ["_id", "username"] },
+      { model: Genre, as: "genre" , attributes: ["_id", "name"]},
+      { model: Subgenre, as: "subgenre",attributes: ["_id", "name"] },
+      { model: Lecture, as: "lectures", attributes: ["_id", "name"] },
+    ],
+    limit: 8,
+    order: [sort],
+    offset: (req.body.page || 1) * 8 - 8,
+  });
+  res.send({code: 200, courses: data})
+};
 
 
 // exports.editUserByAdmin = async (req, res) => {
