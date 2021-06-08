@@ -210,7 +210,8 @@ exports.getMyWishlist = async (req, res) => {
   if (req.body.level) condition.level = req.body.level;
   if (req.body.free)
     condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
-  if (req.body.name) condition.name = { [Op.substring]: "%" + req.body.name + "%" };
+  if (req.body.name)
+    condition.name = { [Op.substring]: "%" + req.body.name + "%" };
   let sort;
   if (!req.body.sort) sort = ["name", "ASC"];
   else {
@@ -298,7 +299,9 @@ exports.getCourse = async (req, res) => {
       name: data.name,
       public: data.public,
       review: data.review,
-      coverphoto: data.coverphoto,
+      coverphoto: data.coverphoto
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        : null,
       cost: data.cost,
     },
   });
@@ -344,7 +347,10 @@ exports.getCourseLectures = async (req, res) => {
     message: "success",
     course: {
       _id: data._id,
-      lectures: data.lectures,
+      lectures: data.lectures.map((lecture) => ({
+        ...lecture.dataValues,
+        video: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lecture.dataValues.video}`,
+      })),
     },
   });
 };
@@ -362,52 +368,28 @@ exports.addVideoLectures = async (req, res) => {
 };
 
 exports.uploadVideoLecture = async (req, res, next) => {
-  // if (data.video) {
-  //   fs.unlink(lecture.video, (err) => {});
-  // }
-  // upload
-  //   .file(`${newFileName}.mp4`)
-  //   .save(fs.readFileSync(`uploads/courses-video/${req.file.filename}`))
-  //   .then(console.log);
-  // const publicURL = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${newFileName}.mp4`
-  // Create a new blob in the bucket and upload the file data.
+  console.log(req.file);
   if (!req.file) {
     res.status(400).send("No file uploaded.");
     return;
   }
-  const newFileName = uuidv1() + "-" + req.file.originalname;
-  const blob = upload.file(`course-videos/${newFileName}`);
-  const blobStream = blob.createWriteStream({
-    resumable: false,
+  const newFileName = req.body.lectureid + ".mp4";
+  await upload.file(`course-videos/${newFileName}`).save(req.file.buffer);
+  const publicUrl = `course-videos/${newFileName}`;
+  await Lecture.update(
+    {
+      video: publicUrl,
+    },
+    { where: { _id: Number(req.body.lectureid) } }
+  );
+  return res.send({
+    code: 200,
+    message: "success",
+    lecture: {
+      _id: Number(req.body.lectureid),
+      video: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${publicUrl}`,
+    },
   });
-
-  blobStream.on("error", (err) => {
-    next(err);
-  });
-
-  blobStream.on("finish", () => {
-    // The public URL can be used to directly access the file via HTTP.
-    const publicUrl = format(
-      `https://storage.googleapis.com/${upload.name}/${blob.name}`
-    );
-    const data = Lecture.update(
-      {
-        // video: "uploads/courses-video/" + req.file.filename,
-        video: publicUrl,
-      },
-      { where: { _id: req.body.lectureid } }
-    );
-    return res.send({
-      code: 200,
-      message: "success",
-      lecture: {
-        _id: req.body.lectureid,
-        video: data.video,
-      },
-    });
-  });
-
-  blobStream.end(req.file.buffer);
 };
 
 exports.uploadVideoPreview = async (req, res, next) => {
@@ -481,7 +463,9 @@ exports.getDescription = async (req, res) => {
       name: data.name,
       previewvideo: data.previewvideo,
       description: data.description,
-      covephoto: data.coverphoto,
+      coverphoto: data.coverphoto
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        : null,
       genre: data.genreId,
       subgenre: data.subGenreId,
       level: data.level,
@@ -490,71 +474,41 @@ exports.getDescription = async (req, res) => {
 };
 
 exports.setDescription = async (req, res, next) => {
-  // let obj = { name: req.body.name, level: req.body.level };
-  // // if (req.file) obj.coverphoto = "/uploads/courses-photo/" + req.file.filename;
-  // if (req.body.description && req.body.description != "undefined")
-  //   obj.description = req.body.description;
-  // if (req.body.genre && req.body.genre != "undefined")
-  //   obj.genre = req.body.genre;
-  // if (req.body.subgenre && req.body.subgenre != "undefined")
-  //   obj.subgenre = req.body.subgenre;
-  // const course = await Course.update(obj, {
-  //   where: { _id: req.body.courseid },
-  // });
+  const coverphoto = `course-photos/${req.body.courseid}.png`;
+  if (req.file) {
+    console.log(req.file);
+    await upload.file(coverphoto).save(req.file.buffer);
+  }
 
-  // upload photo
-  const photoName = uuidv1() + "-" + req.file.originalname;
-  const blob = upload.file(`course-photos/${photoName}`);
-  const blobStream = blob.createWriteStream({
-    resumable: false,
+  const updateValue = {
+    description: req.body.description,
+    name: req.body.name,
+    level: req.body.level,
+    genre: req.body.genre,
+    subgenre: req.body.subgenre,
+  };
+  if (req.file) {
+    updateValue.coverphoto = coverphoto;
+  }
+
+  await Course.update(updateValue, {
+    where: { _id: req.body.courseid },
   });
 
-  blobStream.on("error", (err) => {
-    next(err);
+  const data = await Course.findOne({
+    where: { _id: req.body.courseid },
   });
 
-  blobStream.on("finish", () => {
-    // The public URL can be used to directly access the file via HTTP.
-    const publicPhotoURL = format(
-      `https://storage.googleapis.com/${upload.name}/${blob.name}`
-    );
-    const data = Course.update(
-      {
-        // video: "uploads/courses-video/" + req.file.filename,
-        coverphoto: publicPhotoURL,
-        description: req.body.description,
-        name: req.body.name,
-        level: req.body.level,
-        genre: req.body.genre,
-        subgenre: req.body.subgenre,
-      },
-      { where: { _id: req.body.courseid } }
-    );
-    return res.send({
-      code: 200,
-      message: "success",
-      course: req.file
-        ? {
-            _id: req.body.courseid,
-            name: req.body.name,
-            description: req.body.description,
-            coverphoto: data.coverphoto,
-            genre: req.body.genre,
-            subgenre: req.body.subgenre,
-            level: req.body.level,
-          }
-        : {
-            _id: req.body.courseid,
-            name: req.body.name,
-            description: req.body.description,
-            coverphoto: course.coverphoto,
-            genre: req.body.genre,
-            subgenre: req.body.subgenre,
-            level: req.body.level,
-          },
-    });
+  return res.send({
+    code: 200,
+    message: "success",
+    course: {
+      ...data.dataValues,
+      coverphoto: data.coverphoto
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        : null,
+    },
   });
-  blobStream.end(req.file.buffer);
 };
 
 exports.setPriceCourse = async (req, res) => {

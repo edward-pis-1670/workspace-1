@@ -40,12 +40,14 @@ exports.getCourseByAdmin = async (req, res, next) => {
 exports.getUsersByAdmin = async (req, res, next) => {
   let condition = {};
   if (req.body.searchQuery) {
-    condition.username = {
-      [Op.substring]: "%" + req.body.searchQuery + "%",
-    };
-    condition.email = {
-      [Op.substring]: "%" + req.body.searchQuery + "%",
-    };
+    condition[Op.or] = [
+      {
+        username: { [Op.like]: "%" + req.body.searchQuery + "%" },
+      },
+      {
+        email: { [Op.like]: "%" + req.body.searchQuery + "%" },
+      },
+    ];
   }
   let sort = [];
   if (!req.body.sort) sort = ["username", "ASC"];
@@ -60,7 +62,6 @@ exports.getUsersByAdmin = async (req, res, next) => {
     }
   }
   const data = await User.findAll({
-    // where: { [Op.or]:condition },
     where: condition,
     limit: 8,
     order: [sort],
@@ -92,37 +93,44 @@ exports.getReviewsCourseByAdmin = async (req, res, next) => {
     where: condition,
     include: [
       { model: User, as: "lecturer", attributes: ["_id", "username"] },
-      { model: Genre, as: "genre" , attributes: ["_id", "name"]},
-      { model: Subgenre, as: "subgenre",attributes: ["_id", "name"] },
+      { model: Genre, as: "genre", attributes: ["_id", "name"] },
+      { model: Subgenre, as: "subgenre", attributes: ["_id", "name"] },
       { model: Lecture, as: "lectures", attributes: ["_id", "name"] },
     ],
     limit: 8,
     order: [sort],
     offset: (req.body.page || 1) * 8 - 8,
   });
-  res.send({code: 200, courses: data})
+  res.send({ code: 200, courses: data });
 };
 
-
 exports.editUserByAdmin = async (req, res) => {
-  await User.update({username: req.body.username,
-    email: req.body.email,
-    verified: true,
-    role: req.body.role,
-    creditbalance: req.body.creditbalance,
-    website: req.body.website,
-    linkedin: req.body.linkedin,
-    youtube: req.body.youtube,
-    twitter: req.body.twitter}, {where:{_id:req.body._id}})
-    res.send({code:200})
-}
+  await User.update(
+    {
+      username: req.body.username,
+      email: req.body.email,
+      verified: true,
+      role: req.body.role,
+      creditbalance: req.body.creditbalance,
+      website: req.body.website,
+      linkedin: req.body.linkedin,
+      youtube: req.body.youtube,
+      twitter: req.body.twitter,
+    },
+    { where: { _id: req.body._id } }
+  );
+  res.send({ code: 200 });
+};
 
 exports.deleteUserByAdmin = async (req, res) => {
-await User.destroy({where:{_id:req.body._id}})
-res.send({code:200})
-}
+  await User.destroy({ where: { _id: req.body._id } });
+  res.send({ code: 200 });
+};
 
 exports.acceptCourseByAdmin = async (req, res) => {
-  await Course.update({review:false, public:true}, {where:{_id:req.body._id}})
-  res.send({code:200})
-}
+  await Course.update(
+    { review: false, public: true },
+    { where: { _id: req.body._id } }
+  );
+  res.send({ code: 200 });
+};

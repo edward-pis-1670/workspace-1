@@ -19,7 +19,11 @@ const catchError = async (func) => {
 };
 
 function route(app) {
-  app.use('/admin', AdminRouter)
+  app.use(
+    "/admin",
+    passport.authenticate("jwt", { session: false }),
+    AdminRouter
+  );
   app.use(passport.initialize());
   app.use("/courses", CourseRouter);
   app.use("/", GenreRouter);
