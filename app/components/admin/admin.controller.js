@@ -104,18 +104,18 @@ exports.getReviewsCourseByAdmin = async (req, res, next) => {
 };
 
 
-// exports.editUserByAdmin = async (req, res) => {
-//   await User.update({username: req.body.username,
-//     email: req.body.email,
-//     verified: true,
-//     role: req.body.role,
-//     creditbalance: req.body.creditbalance,
-//     website: req.body.website,
-//     linkedin: req.body.linkedin,
-//     youtube: req.body.youtube,
-//     twitter: req.body.twitter}, {where:{_id:req.body._id}})
-//     res.send({code:200})
-// }
+exports.editUserByAdmin = async (req, res) => {
+  await User.update({username: req.body.username,
+    email: req.body.email,
+    verified: true,
+    role: req.body.role,
+    creditbalance: req.body.creditbalance,
+    website: req.body.website,
+    linkedin: req.body.linkedin,
+    youtube: req.body.youtube,
+    twitter: req.body.twitter}, {where:{_id:req.body._id}})
+    res.send({code:200})
+}
 
 // exports.deleteUserByAdmin = async (req, res) => {
 // await User.destroy({where:{_id:req.body._id}})
