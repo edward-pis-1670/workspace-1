@@ -117,7 +117,7 @@ exports.editUserByAdmin = async (req, res) => {
     res.send({code:200})
 }
 
-// exports.deleteUserByAdmin = async (req, res) => {
-// await User.destroy({where:{_id:req.body._id}})
-// res.send({code:200})
-// }
+exports.deleteUserByAdmin = async (req, res) => {
+await User.destroy({where:{_id:req.body._id}})
+res.send({code:200})
+}
