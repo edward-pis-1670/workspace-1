@@ -1,6 +1,7 @@
 const db = require("../../models/db.config");
 const User = db.users;
 const Lecture = db.lectures;
+const Course = db.courses
 const send = require("send");
 exports.playVideoLectures = async (req, res) => {
   const data = await Lecture.findOne({
@@ -14,6 +15,12 @@ exports.playVideoPreview = async (req, res) => {
   const data = await Course.findOne({
     where: { _id: req.params.courseid },
   });
-  // return send(req, lecture.video).pipe(res);
   res.send(data.previewvideo)
+}
+
+
+exports.getImageCourse = async (req, res) => {
+  const data = await Course.findOne({where: {_id: req.body.courseid}})
+  res.send(data.coverphoto)
+  // res.redirect(req.query.src)
 }

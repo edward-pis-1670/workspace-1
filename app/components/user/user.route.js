@@ -10,7 +10,29 @@ const uploadcoursevideo = multer({
   },
 });
 
-var uploadcoursephoto = multer({ dest: "public/uploads/courses-photo" });
+const uploadPreviewvideo = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+// var uploadcoursephoto = multer({ dest: "public/uploads/courses-photo" });
+const uploadCoursePhoto = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const uploadavatar = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+
 
 const catchError = async (func) => {
   return async (req, res, next) => {
@@ -42,7 +64,7 @@ router.post("/change-preview-lecture", controller.changePreview);
 
 router.post(
   "/upload-previewvideo-lecture",
-  uploadcoursevideo.single("video"),
+  uploadPreviewvideo.single("previewvideo"),
   controller.uploadVideoPreview
 );
 router.post(
@@ -53,12 +75,14 @@ router.post(
 router.post("/get-description-course", controller.getDescription);
 router.post(
   "/set-description-course",
-  uploadcoursephoto.single("coverphoto"),
+  uploadCoursePhoto.single("coverphoto"),
   controller.setDescription
 );
 router.post("/set-price-course", controller.setPriceCourse);
 router.post("/delete-course", controller.deleteCourse);
 router.post("/delete-video-lectures", controller.deleteVideoLectures);
 router.post("/publish-course", controller.publishCourse);
+router.post("/edit-profile", controller.editProfile);
+router.post("/edit-avatar", uploadavatar.single("avatar"),controller.editAvatar);
 
 module.exports = router;
