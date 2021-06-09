@@ -23,6 +23,9 @@ exports.getCoursesHomepage = async (req, res) => {
         attributes: ["username", "photo"],
       },
     });
+    courses.map(course => {
+      course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}`
+    })
     genre.courses = courses;
   }
 

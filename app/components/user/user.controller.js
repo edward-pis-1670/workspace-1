@@ -102,10 +102,16 @@ exports.getCourseByMe = async (req, res) => {
 };
 
 exports.getAllMyCourses = async (req, res) => {
-  const data = await Course.findAll({
+  const datas = await Course.findAll({
     where: { userId: req.user._id },
   });
-  res.end(JSON.stringify(data));
+//   const dataConvert = {...data.dataValues,
+//     coverphoto:
+// `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}`}
+datas.map(data => {
+  data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+})
+  res.end(JSON.stringify(datas));
 };
 
 exports.createCourse = async (req, res) => {
@@ -368,7 +374,6 @@ exports.addVideoLectures = async (req, res) => {
 };
 
 exports.uploadVideoLecture = async (req, res, next) => {
-  console.log(req.file);
   if (!req.file) {
     res.status(400).send("No file uploaded.");
     return;
@@ -397,35 +402,21 @@ exports.uploadVideoPreview = async (req, res, next) => {
     res.status(400).send("No file uploaded.");
     return;
   }
-  const videoPreviewName = uuidv1() + "-" + req.file.originalname;
-  const blob = upload.file(`course-preview-videos/${videoPreviewName}`);
-  const blobStream = blob.createWriteStream({
-    resumable: false,
+  const newFileName = req.body.courseid + ".mp4";
+  await upload.file(`course-preview-videos/${newFileName}`).save(req.file.buffer);
+  const publicUrl = `course-preview-videos/${newFileName}`;
+  await Course.update(
+    {
+      previewvideo: publicUrl,
+    },
+    { where: { _id: Number(req.body.courseid) } }
+  );
+  await Course.findOne({where:{_id:Number(req.body.courseid)}})
+  return res.send({
+    code: 200,
+    message: "success",
+    previewvideo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${publicUrl}`,
   });
-
-  blobStream.on("error", (err) => {
-    next(err);
-  });
-
-  blobStream.on("finish", () => {
-    // The public URL can be used to directly access the file via HTTP.
-    const publicPreviewUrl = format(
-      `https://storage.googleapis.com/${upload.name}/${blob.name}`
-    );
-    const data = Course.update(
-      {
-        // video: "uploads/courses-video/" + req.file.filename,
-        previewvideo: publicPreviewUrl,
-      },
-      { where: { _id: req.body.courseid } }
-    );
-    return res.send({
-      code: 200,
-      message: "success",
-      previewvideo: data.previewvideo,
-    });
-  });
-  blobStream.end(req.file.buffer);
 };
 exports.setNameLecture = async (req, res) => {
   const data = await Lecture.update(
@@ -461,7 +452,7 @@ exports.getDescription = async (req, res) => {
     course: {
       _id: data._id,
       name: data.name,
-      previewvideo: data.previewvideo,
+      previewvideo: data.previewvideo ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.previewvideo}` : null,
       description: data.description,
       coverphoto: data.coverphoto
         ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
