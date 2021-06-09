@@ -23,9 +23,9 @@ exports.getCoursesHomepage = async (req, res) => {
         attributes: ["username", "photo"],
       },
     });
-    courses.map(course => {
-      course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}`
-    })
+    courses.map((course) => {
+      course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}`;
+    });
     genre.courses = courses;
   }
 
@@ -88,6 +88,9 @@ exports.getCourseByGenre = async (req, res) => {
         "name",
         "star",
       ],
+    });
+    courses.map((course) => {
+      course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}`;
     });
     subgenre.courses = courses;
     data.push(subgenre);
@@ -163,6 +166,27 @@ exports.getInfoCourse = async (req, res) => {
 };
 
 exports.getCourseBySubgenre = async (req, res) => {
+  let sort;
+  if (!req.body.sort) sort = ["numberofstudent", "DESC"];
+  else {
+    switch (parseInt(req.body.sort)) {
+      case 1:
+        sort = ["numberofstudent", "DESC"];
+        break;
+      case 2:
+        sort = ["star", "DESC"];
+        break;
+      case 3:
+        sort = ["createdAt", "DESC"];
+        break;
+      case 4:
+        sort = ["cost", "DESC"];
+        break;
+      case 5:
+        sort = ["cost", "ASC"];
+        break;
+    }
+  }
   const data = await Subgenre.findOne({
     where: {
       _id: req.params.subgenreid,
@@ -171,7 +195,6 @@ exports.getCourseBySubgenre = async (req, res) => {
       {
         model: Course,
         as: "subgenre",
-        limit: 8,
         attributes: [
           "cost",
           "coverphoto",
@@ -185,12 +208,17 @@ exports.getCourseBySubgenre = async (req, res) => {
           as: "lecturer",
           attributes: ["_id", "username"],
         },
+        limit: 8,
+        order: [sort],
       },
       {
         model: Genre,
         as: "subgenres1",
       },
     ],
+  });
+  data.subgenre.map((i) => {
+    i.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${i.coverphoto}`;
   });
   res.json({
     code: 200,
@@ -258,7 +286,8 @@ exports.searchCourse = async (req, res) => {
   if (req.body.level) condition.level = req.body.level;
   if (req.body.free)
     condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
-  if (req.body.name) condition.name = { [Op.substring]: "%" + req.body.name + "%" };
+  if (req.body.name)
+    condition.name = { [Op.substring]: "%" + req.body.name + "%" };
   let sort;
   if (!req.body.sort) sort = ["numberofstudent", "DESC"];
   else {
@@ -299,6 +328,7 @@ exports.searchCourse = async (req, res) => {
     ],
     limit: 8,
     offset: (req.body.page || 1) * 8 - 8,
+    order:[sort]
   });
   res.json({
     code: 200,

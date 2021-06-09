@@ -37,6 +37,7 @@ exports.getMe = async (req, res) => {
     limit: 4,
   });
   user.dataValues.notis = notis;
+  user.dataValues.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}`
   user.dataValues.mywishlist = wishlistId;
   res.send({
     user: user,
@@ -75,7 +76,7 @@ exports.getCourseByMe = async (req, res) => {
         break;
     }
   }
-  const data = await Course.findAll({
+  const datas = await Course.findAll({
     where: condition,
     include: {
       model: User,
@@ -95,9 +96,12 @@ exports.getCourseByMe = async (req, res) => {
     limit: 8,
     offset: (req.body.page || 1) * 8 - 8,
   });
+  datas.map(data => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+  })
   res.json({
     code: 200,
-    courses: data,
+    courses: datas,
   });
 };
 
@@ -209,7 +213,6 @@ exports.getMyWishlist = async (req, res) => {
   ids.map((id) => {
     wishlistId.push(id.courseId);
   });
-  // console.log(wishlistId)
 
   let condition = { public: true };
   condition._id = { [Op.in]: wishlistId };
@@ -231,7 +234,7 @@ exports.getMyWishlist = async (req, res) => {
     }
   }
 
-  const data = await Course.findAll({
+  const datas = await Course.findAll({
     where: condition,
     include: {
       model: User,
@@ -250,8 +253,12 @@ exports.getMyWishlist = async (req, res) => {
     ],
     limit: 3,
     offset: (req.body.page || 1) * 3 - 3,
+    order: [sort]
   });
-  res.json({ code: 200, courses: data });
+  datas.map(data => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+  })
+  res.json({ code: 200, courses: datas });
 };
 
 exports.changeWishlist = async (req, res) => {
@@ -602,36 +609,19 @@ exports.editProfile = async (req, res) => {
 };
 
 exports.editAvatar = async (req, res) => {
-  if (!req.file) {
-    res.status(400).send("No file uploaded.");
-    return;
+  const avatar = `course-avatar/${req.user._id}.png`;
+  if (req.file) {
+    await upload.file(avatar).save(req.file.buffer);
   }
-  const avatarName = uuidv1() + "-" + req.file.originalname;
-  const blob = upload.file(`course-avatar/${avatarName}`);
-  const blobStream = blob.createWriteStream({
-    resumable: false,
+  const data = await User.update(
+    {
+      photo: avatar,
+    },
+    { where: { _id: req.user._id } }
+  );
+  return res.send({
+    code: 200,
+    message: "success",
+    photo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}`,
   });
-
-  blobStream.on("error", (err) => {
-    next(err);
-  });
-
-  blobStream.on("finish", async () => {
-    // The public URL can be used to directly access the file via HTTP.
-    const publicAvatarURL = format(
-      `https://storage.googleapis.com/${upload.name}/${blob.name}`
-    );
-    const data = await User.update(
-      {
-        photo: publicAvatarURL,
-      },
-      { where: { _id: req.user._id } }
-    );
-    return res.send({
-      code: 200,
-      message: "success",
-      photo: data.photo,
-    });
-  });
-  blobStream.end(req.file.buffer);
 };

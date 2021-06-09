@@ -16,7 +16,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     coverphoto: {
       type: Sequelize.STRING,
-      defaultValue: "/images/course-image.png",
+      defaultValue: "https://storage.googleapis.com/fake_api_course/course-photos/course-image.png",
     },
     previewvideo: {
       type: Sequelize.STRING,

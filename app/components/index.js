@@ -5,6 +5,7 @@ const AuthenRouter = require("./authen/authen.route");
 const UserRouter = require("./user/user.route");
 const ResourceRouter = require("./resources/resource.route");
 const AdminRouter = require("./admin/admin.route");
+const isAdmin = require('../middleware/isAdmin')
 
 require("../middleware/passport");
 
@@ -21,7 +22,7 @@ const catchError = async (func) => {
 function route(app) {
   app.use(
     "/admin",
-    passport.authenticate("jwt", { session: false }),
+    passport.authenticate("jwt", { session: false }), isAdmin,
     AdminRouter
   );
   app.use(passport.initialize());

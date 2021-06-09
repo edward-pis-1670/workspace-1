@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
     password: hashedPassword,
   });
   const jwtToken = jwt.sign(
-    { _id: newUser._id, email: newUser.email },
+    { _id: newUser._id, email: newUser.email , role: newUser.role},
     process.env.JWT_SECRET
   );
   newUser.verifyToken = jwtToken;
@@ -81,7 +81,7 @@ exports.login = async (req, res) => {
     return res.json("Password is incorrect");
   }
   const jwtToken = jwt.sign(
-    { _id: userWithEmail._id, email: userWithEmail.email },
+    { _id: userWithEmail._id, email: userWithEmail.email , role: userWithEmail.role},
     process.env.JWT_SECRET
   );
   res.send({
