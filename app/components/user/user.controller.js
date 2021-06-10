@@ -35,7 +35,6 @@ exports.getMe = async (req, res) => {
 user.dataValues.mylearningcourses.map(u => {
   mylearningcourses.push(u._id)
 })
-console.log(mylearningcourses)
   const notis = await Notification.findAll({
     where: { receiverId: req.user._id },
     include: { model: User, as: "from", attributes: ["photo", "_id"] },
@@ -601,12 +600,16 @@ exports.addReview = async (req, res) => {
 };
 
 exports.getNotification = async (req, res) => {
-  const data = await Notification.findAll({
+  const datas = await Notification.findAll({
     where: { receiverId: req.user._id },
+    include: { model: User, as: "from", attributes: ["photo", "_id"] },
     limit: 4,
     offset: (req.body.page || 1) * 4 - 4,
   });
-  res.send({ code: 200, notis: data });
+datas.map(data => {
+  data.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.from.photo}/200_200.png`
+})
+  res.send({ code: 200, notis: datas });
 };
 
 exports.markReadNotification = async (req, res) => {
