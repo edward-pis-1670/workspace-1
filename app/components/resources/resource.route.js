@@ -5,5 +5,5 @@ const router = express.Router()
 
 router.get("/play-video-lecturer/:lectureid", controller.playVideoLectures);
 router.get("/play-video-preview-lecturer/:lectureid", controller.playVideoPreview);
-router.post("/images", controller.getImageCourse);
+router.post("/images", controller.getImage);
 module.exports = router;

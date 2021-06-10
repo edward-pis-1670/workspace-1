@@ -28,7 +28,7 @@ db.users = require("./user.model.js")(sequelize, Sequelize);
 db.reviews = require("./review.model.js")(sequelize, Sequelize);
 db.lectures = require("./lecture.model.js")(sequelize, Sequelize);
 db.wishlists = require("./wishlist.model")(sequelize,Sequelize)
-db.userCourse = require('./user_course.model')(sequelize,Sequelize)
+db.learnings = require('./user_course.model')(sequelize,Sequelize)
 db.notifications = require('./notification.model')(sequelize,Sequelize)
 
 

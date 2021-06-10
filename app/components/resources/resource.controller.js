@@ -19,8 +19,6 @@ exports.playVideoPreview = async (req, res) => {
 }
 
 
-exports.getImageCourse = async (req, res) => {
-  const data = await Course.findOne({where: {_id: req.body.courseid}})
-  res.send(data.coverphoto)
-  // res.redirect(req.query.src)
+exports.getImage = async (req, res) => {
+  res.redirect(req.query.src);
 }

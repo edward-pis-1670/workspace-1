@@ -5,15 +5,17 @@ const Wishlist = db.wishlists;
 const Lecture = db.lectures;
 const Review = db.reviews;
 const Notification = db.notifications;
+const Learning = db.learnings;
 const uuid = require("uuid");
 const uuidv1 = uuid.v1;
 const fs = require("fs");
 const { Op, Sequelize } = require("sequelize");
 const { format } = require("util");
 const upload = require("../../services/googleStorage.service");
+const sharp = require("sharp");
 
 exports.getMe = async (req, res) => {
-  const wishlistId = [];
+  let wishlistId = [];
   const ids = await Wishlist.findAll({
     where: { userId: req.user._id },
     raw: true,
@@ -27,20 +29,27 @@ exports.getMe = async (req, res) => {
       model: Course,
       as: "mylearningcourses",
       attributes: ["_id"],
-    },
+    }
   });
-
+  let mylearningcourses = []
+user.dataValues.mylearningcourses.map(u => {
+  mylearningcourses.push(u._id)
+})
+console.log(mylearningcourses)
   const notis = await Notification.findAll({
     where: { receiverId: req.user._id },
     include: { model: User, as: "from", attributes: ["photo", "_id"] },
 
     limit: 4,
   });
+  notis.map(noti => {
+    noti.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${noti.from.photo}/200_200.png`
+  })
   user.dataValues.notis = notis;
-  user.dataValues.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}`
+  user.dataValues.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}/200_200.png`;
   user.dataValues.mywishlist = wishlistId;
   res.send({
-    user: user,
+    user: {...user.dataValues, mylearningcourses:mylearningcourses},
     code: 200,
     message: "success",
   });
@@ -96,9 +105,9 @@ exports.getCourseByMe = async (req, res) => {
     limit: 8,
     offset: (req.body.page || 1) * 8 - 8,
   });
-  datas.map(data => {
-    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
-  })
+  datas.map((data) => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/240_135.png`;
+  });
   res.json({
     code: 200,
     courses: datas,
@@ -109,12 +118,9 @@ exports.getAllMyCourses = async (req, res) => {
   const datas = await Course.findAll({
     where: { userId: req.user._id },
   });
-//   const dataConvert = {...data.dataValues,
-//     coverphoto:
-// `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}`}
-datas.map(data => {
-  data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
-})
+  datas.map((data) => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/130_73.png`;
+  });
   res.end(JSON.stringify(datas));
 };
 
@@ -130,35 +136,19 @@ exports.createCourse = async (req, res) => {
 };
 
 exports.takeACourses = async (req, res) => {
-  const user = await User.findOne({
-    where: { _id: req.user._id },
-    include: {
-      model: Course,
-      as: "mylearningcourses",
-      attributes: ["_id"],
-    },
+  const courseIdfound = await Learning.findAll({
+    where: { userId: req.user._id },
   });
-  let mylearningcourses = [];
-  user.mylearningcourses.map((mycourse) => {
-    mylearningcourses.push(mycourse._id);
+  const result = courseIdfound.filter((element) => {
+    return (element.dataValues.courseId = req.body.courseid);
   });
-  if (
-    mylearningcourses.includes(
-      JSON.stringify(req.body.courseid),
-      req.body.courseid
-    )
-  ) {
+  if (!result) {
     return res.send({ code: 404, message: "error" });
   } else {
-    Course.findOne({
-      where: { _id: req.body.courseid },
-      include: {
-        model: User,
-        as: "lecturer",
-        attributes: ["_id"],
-      },
+    await Course.findOne({
+      where: { _id: req.body.courseid }
     })
-      .then((course) => {
+      .then(async (course) => {
         if (!course) return res.send({ code: 404, message: "error" });
         if (req.user.creditbalance < course.cost) {
           return res.send({
@@ -166,6 +156,9 @@ exports.takeACourses = async (req, res) => {
             message: "The credit balance is not enough to make payments",
           });
         }
+        await Learning.create({ userId: req.user._id, courseId: req.body.courseid })
+        .then((u) => console.log(u))
+        .catch((err) => console.log(err));
         User.increment(
           { creditbalance: -course.cost },
           { where: { _id: req.user._id } }
@@ -253,11 +246,12 @@ exports.getMyWishlist = async (req, res) => {
     ],
     limit: 3,
     offset: (req.body.page || 1) * 3 - 3,
-    order: [sort]
+    order: [sort],
   });
-  datas.map(data => {
-    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
-  })
+  datas.map((data) => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/130_73.png`;
+    data.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.lecturer.photo}/200_200.png`;
+  });
   res.json({ code: 200, courses: datas });
 };
 
@@ -410,7 +404,13 @@ exports.uploadVideoPreview = async (req, res, next) => {
     return;
   }
   const newFileName = req.body.courseid + ".mp4";
-  await upload.file(`course-preview-videos/${newFileName}`).save(req.file.buffer);
+  await upload
+    .file(`course-preview-videos/${newFileName}`)
+    .save(req.file.buffer, {
+      metadata: {
+        cacheControl: "no-cache, max-age=0",
+      },
+    });
   const publicUrl = `course-preview-videos/${newFileName}`;
   await Course.update(
     {
@@ -418,7 +418,7 @@ exports.uploadVideoPreview = async (req, res, next) => {
     },
     { where: { _id: Number(req.body.courseid) } }
   );
-  await Course.findOne({where:{_id:Number(req.body.courseid)}})
+  await Course.findOne({ where: { _id: Number(req.body.courseid) } });
   return res.send({
     code: 200,
     message: "success",
@@ -459,10 +459,12 @@ exports.getDescription = async (req, res) => {
     course: {
       _id: data._id,
       name: data.name,
-      previewvideo: data.previewvideo ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.previewvideo}` : null,
+      previewvideo: data.previewvideo
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.previewvideo}`
+        : null,
       description: data.description,
       coverphoto: data.coverphoto
-        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/320_180.png`
         : null,
       genre: data.genreId,
       subgenre: data.subGenreId,
@@ -472,10 +474,27 @@ exports.getDescription = async (req, res) => {
 };
 
 exports.setDescription = async (req, res, next) => {
-  const coverphoto = `course-photos/${req.body.courseid}.png`;
+  const coverphoto = `course-photos/${req.body.courseid}`;
+  const sizes = [
+    [320, 180],
+    [130, 73],
+    [240, 135],
+  ];
   if (req.file) {
-    console.log(req.file);
-    await upload.file(coverphoto).save(req.file.buffer);
+    sizes.map((size) => {
+      sharp(req.file.buffer)
+        .resize(size[0], size[1])
+        .toBuffer()
+        .then(async (data) => {
+          await upload
+            .file(`${coverphoto}/${size[0]}_${size[1]}.png`)
+            .save(data, {
+              metadata: {
+                cacheControl: "no-cache, max-age=0",
+              },
+            });
+        });
+    });
   }
 
   const updateValue = {
@@ -503,7 +522,7 @@ exports.setDescription = async (req, res, next) => {
     course: {
       ...data.dataValues,
       coverphoto: data.coverphoto
-        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/320_180.png`
         : null,
     },
   });
@@ -591,7 +610,8 @@ exports.getNotification = async (req, res) => {
 };
 
 exports.markReadNotification = async (req, res) => {
-  Notification.update({ seen: true }, { where: { _id: req.body.id } });
+  await Notification.update({ seen: true }, { where: { receiverId: req.user._id, seen: false, _id: req.body.id }});
+  res.send({code: 200, message: "success"})
 };
 
 exports.deleteVideoLectures = async (req, res) => {
@@ -609,19 +629,38 @@ exports.editProfile = async (req, res) => {
 };
 
 exports.editAvatar = async (req, res) => {
-  const avatar = `course-avatar/${req.user._id}.png`;
+  const avatar = `course-avatar/${req.user._id}`;
+  const sizes = [50, 100, 200];
   if (req.file) {
-    await upload.file(avatar).save(req.file.buffer);
+    sizes.map((size) => {
+      sharp(req.file.buffer)
+        .resize(size, size)
+        .toBuffer()
+        .then(async (data) => {
+          await upload.file(`${avatar}/${size}_${size}.png`).save(data, {
+            metadata: {
+              cacheControl: "no-cache, max-age=0",
+            },
+          });
+        });
+    });
   }
-  const data = await User.update(
+  await User.update(
     {
       photo: avatar,
     },
     { where: { _id: req.user._id } }
   );
+  const data = await User.findOne({ where: { _id: req.user._id } });
   return res.send({
     code: 200,
     message: "success",
-    photo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}`,
+    photo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}/200_200.png`,
   });
 };
+
+
+exports.markAllReadNotifications = async(req, res) => {
+  await Notification.update({ seen: true }, { where: { receiverId: req.user._id, seen: false } });
+  res.send({code: 200, message: "success"})
+}

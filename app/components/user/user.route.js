@@ -49,6 +49,7 @@ router.post("/learning", controller.getCourseByMe);
 router.post("/add-review", controller.addReview);
 router.post("/get-notification", controller.getNotification);
 router.post("/mark-read-notification", controller.markReadNotification);
+router.get("/mark-read-all-notification", controller.markAllReadNotifications);
 router.get("/get-all-my-courses", controller.getAllMyCourses);
 router.post("/create-course", controller.createCourse);
 router.post("/take-a-course", controller.takeACourses);

@@ -1,5 +1,5 @@
 module.exports = (sequelize, Sequelize) => {
-    const userCourse = sequelize.define(
+    const learning = sequelize.define(
       "user_courses",
       {
         _id: {
@@ -23,6 +23,6 @@ module.exports = (sequelize, Sequelize) => {
       }
     );
   
-    return userCourse;
+    return learning;
   };
   
