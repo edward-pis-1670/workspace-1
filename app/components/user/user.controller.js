@@ -44,7 +44,7 @@ exports.getMe = async (req, res) => {
   notis.map((noti) => {
     noti.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${noti.from.photo}/200_200.png`;
   });
-  user.notis = notis;
+  user.dataValues.notis = notis;
   user.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}/200_200.png`;
   user.dataValues.mywishlist = wishlistId;
   res.send({
@@ -310,7 +310,7 @@ exports.getCourse = async (req, res) => {
       public: data.public,
       review: data.review,
       coverphoto: data.coverphoto
-        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}`
+        ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/130_73.png`
         : null,
       cost: data.cost,
     },
@@ -504,8 +504,8 @@ exports.setDescription = async (req, res, next) => {
     description: req.body.description,
     name: req.body.name,
     level: req.body.level,
-    genre: req.body.genre,
-    subgenre: req.body.subgenre,
+    genreId: req.body.genre,
+    subGenreId: req.body.subgenre,
   };
   if (req.file) {
     updateValue.coverphoto = coverphoto;

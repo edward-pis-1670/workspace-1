@@ -11,12 +11,12 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
     },
     description: {
-      type: Sequelize.STRING,
+      type: Sequelize.STRING(5000),
       allowNull: true,
     },
     coverphoto: {
       type: Sequelize.STRING,
-      defaultValue: "https://storage.googleapis.com/fake_api_course/course-photos/course-image.png",
+      defaultValue: "defaultValue",
     },
     previewvideo: {
       type: Sequelize.STRING,
@@ -60,15 +60,15 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: true,
       defaultValue: [],
     },
-    willableto:{
+    willableto: {
       type: Sequelize.JSON,
       allowNull: true,
       defaultValue: [],
     },
-    level:{
-      type:Sequelize.INTEGER,
-      defaultValue:0
-    }
+    level: {
+      type: Sequelize.INTEGER,
+      defaultValue: 0,
+    },
   });
   return course;
 };

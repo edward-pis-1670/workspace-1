@@ -14,6 +14,7 @@ exports.getCoursesHomepage = async (req, res) => {
     const courses = await Course.findAll({
       where: {
         genreId: genre._id,
+        public: true,
       },
       limit: 8,
       order: [["createdAt", "DESC"]],
@@ -72,6 +73,7 @@ exports.getCourseByGenre = async (req, res) => {
     const courses = await Course.findAll({
       where: {
         subGenreId: subgenre._id,
+        public: true,
       },
       limit: 8,
       include: {
@@ -182,6 +184,7 @@ exports.getCourseBySubgenre = async (req, res) => {
     include: [
       {
         model: Course,
+        where: { public: true },
         as: "subgenre",
         attributes: [
           "cost",

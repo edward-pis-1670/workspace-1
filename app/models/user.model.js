@@ -24,14 +24,14 @@ module.exports = (sequelize, Sequelize) => {
     },
     photo: {
       type: Sequelize.STRING,
-      defaultValue:"defaultValue/noProfile.png"
+      defaultValue: "defaultValue",
     },
     biography: {
-      type: Sequelize.STRING,
+      type: Sequelize.STRING(5000),
     },
     role: {
       type: Sequelize.INTEGER,
-      defaultValue: 0
+      defaultValue: 0,
     },
     facebookid: {
       type: Sequelize.STRING,

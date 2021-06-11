@@ -1,8 +1,8 @@
 const db = require("../../models/db.config");
 const jwt = require("jsonwebtoken");
 const User = db.users;
-const Course = db.courses
-const Notification = db.notifications
+const Course = db.courses;
+const Notification = db.notifications;
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 
@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
     password: hashedPassword,
   });
   const jwtToken = jwt.sign(
-    { _id: newUser._id, email: newUser.email , role: newUser.role},
+    { _id: newUser._id, email: newUser.email, role: newUser.role },
     process.env.JWT_SECRET
   );
   newUser.verifyToken = jwtToken;
@@ -64,7 +64,7 @@ exports.register = async (req, res) => {
     })
     .catch((err) => res.json(err));
 
-  res.json({message:"Register successfully"});
+  res.json({ message: "Register successfully" });
 };
 
 exports.login = async (req, res) => {
@@ -81,8 +81,16 @@ exports.login = async (req, res) => {
     return res.json("Password is incorrect");
   }
   const jwtToken = jwt.sign(
-    { _id: userWithEmail._id, email: userWithEmail.email , role: userWithEmail.role},
+    {
+      _id: userWithEmail._id,
+      email: userWithEmail.email,
+      role: userWithEmail.role,
+    },
     process.env.JWT_SECRET
+  );
+  await User.update(
+    { verifyToken: jwtToken },
+    { where: { _id: userWithEmail._id } }
   );
   res.send({
     code: 200,
@@ -106,14 +114,10 @@ exports.verifyAccount = async (req, res) => {
     });
 };
 
-
 exports.logout = (req, res) => {
   req.logout();
-  res.send({ code: 200 })
-}
-
-
-
+  res.send({ code: 200 });
+};
 
 exports.forgotPassword = async (req, res, next) => {
   const account = await User.findOne({ where: { email: req.body.email } });
