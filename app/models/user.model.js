@@ -24,7 +24,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     photo: {
       type: Sequelize.STRING,
-      defaultValue:"https://img-a.udemycdn.com/user/200_H/14214490_3956_2.jpg"
+      defaultValue:"defaultValue/noProfile.png"
     },
     biography: {
       type: Sequelize.STRING,
@@ -62,7 +62,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     verifyToken: {
       type: Sequelize.STRING,
-      allowNull: false,
+      allowNull: true,
     },
   });
   return user;

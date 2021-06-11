@@ -4,6 +4,7 @@ const Course = db.courses;
 const Genre = db.genres;
 const Subgenre = db.subGenres;
 const Lecture = db.lectures;
+const bcrypt = require('bcrypt')
 const { Op } = require("sequelize");
 
 exports.getCourseByAdmin = async (req, res, next) => {
@@ -61,13 +62,16 @@ exports.getUsersByAdmin = async (req, res, next) => {
         break;
     }
   }
-  const data = await User.findAll({
+  const datas = await User.findAll({
     where: condition,
     limit: 8,
     order: [sort],
     offset: (req.body.page || 1) * 8 - 8,
   });
-  res.send({ code: 200, users: data });
+  datas.map(data => {
+    data.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}/200_200.png`
+  })
+  res.send({ code: 200, users: datas });
 };
 
 exports.getReviewsCourseByAdmin = async (req, res, next) => {
@@ -134,3 +138,26 @@ exports.acceptCourseByAdmin = async (req, res) => {
   );
   res.send({ code: 200 });
 };
+
+
+exports.addNewUser = async (req, res) => {
+  const result = await User.findOne({where:{email: req.body.email}})
+  if(result) {
+    return res.send({code:401, message:"User is already registered"})
+  } else {
+    const hashedPassword = bcrypt.hashSync(req.body.password, 8);
+    await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: hashedPassword,
+      verified: true,
+      role: req.body.role,
+      creditbalance: req.body.creditbalance,
+      website: req.body.website,
+      linkedin: req.body.linkedin,
+      youtube: req.body.youtube,
+      twitter: req.body.twitter})
+  }
+
+  res.send({code:200, message:"success"})
+}

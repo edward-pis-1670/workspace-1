@@ -190,6 +190,7 @@ exports.getCourseBySubgenre = async (req, res) => {
           "name",
           "numberofstudent",
           "numberofreviews",
+          "_id"
         ],
         include: {
           model: User,

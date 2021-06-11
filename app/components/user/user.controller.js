@@ -29,26 +29,26 @@ exports.getMe = async (req, res) => {
       model: Course,
       as: "mylearningcourses",
       attributes: ["_id"],
-    }
+    },
   });
-  let mylearningcourses = []
-user.dataValues.mylearningcourses.map(u => {
-  mylearningcourses.push(u._id)
-})
+  let mylearningcourses = [];
+  user.dataValues.mylearningcourses.map((u) => {
+    mylearningcourses.push(u._id);
+  });
   const notis = await Notification.findAll({
     where: { receiverId: req.user._id },
     include: { model: User, as: "from", attributes: ["photo", "_id"] },
 
     limit: 4,
   });
-  notis.map(noti => {
-    noti.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${noti.from.photo}/200_200.png`
-  })
-  user.dataValues.notis = notis;
-  user.dataValues.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}/200_200.png`;
+  notis.map((noti) => {
+    noti.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${noti.from.photo}/200_200.png`;
+  });
+  user.notis = notis;
+  user.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${user.photo}/200_200.png`;
   user.dataValues.mywishlist = wishlistId;
   res.send({
-    user: {...user.dataValues, mylearningcourses:mylearningcourses},
+    user: { ...user.dataValues, mylearningcourses: mylearningcourses },
     code: 200,
     message: "success",
   });
@@ -106,6 +106,7 @@ exports.getCourseByMe = async (req, res) => {
   });
   datas.map((data) => {
     data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/240_135.png`;
+    data.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.lecturer.photo}/200_200.png`;
   });
   res.json({
     code: 200,
@@ -145,7 +146,7 @@ exports.takeACourses = async (req, res) => {
     return res.send({ code: 404, message: "error" });
   } else {
     await Course.findOne({
-      where: { _id: req.body.courseid }
+      where: { _id: req.body.courseid },
     })
       .then(async (course) => {
         if (!course) return res.send({ code: 404, message: "error" });
@@ -155,9 +156,12 @@ exports.takeACourses = async (req, res) => {
             message: "The credit balance is not enough to make payments",
           });
         }
-        await Learning.create({ userId: req.user._id, courseId: req.body.courseid })
-        .then((u) => console.log(u))
-        .catch((err) => console.log(err));
+        await Learning.create({
+          userId: req.user._id,
+          courseId: req.body.courseid,
+        })
+          .then((u) => console.log(u))
+          .catch((err) => console.log(err));
         User.increment(
           { creditbalance: -course.cost },
           { where: { _id: req.user._id } }
@@ -606,15 +610,18 @@ exports.getNotification = async (req, res) => {
     limit: 4,
     offset: (req.body.page || 1) * 4 - 4,
   });
-datas.map(data => {
-  data.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.from.photo}/200_200.png`
-})
+  datas.map((data) => {
+    data.from.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.from.photo}/200_200.png`;
+  });
   res.send({ code: 200, notis: datas });
 };
 
 exports.markReadNotification = async (req, res) => {
-  await Notification.update({ seen: true }, { where: { receiverId: req.user._id, seen: false, _id: req.body.id }});
-  res.send({code: 200, message: "success"})
+  await Notification.update(
+    { seen: true },
+    { where: { receiverId: req.user._id, seen: false, _id: req.body.id } }
+  );
+  res.send({ code: 200, message: "success" });
 };
 
 exports.deleteVideoLectures = async (req, res) => {
@@ -662,8 +669,10 @@ exports.editAvatar = async (req, res) => {
   });
 };
 
-
-exports.markAllReadNotifications = async(req, res) => {
-  await Notification.update({ seen: true }, { where: { receiverId: req.user._id, seen: false } });
-  res.send({code: 200, message: "success"})
-}
+exports.markAllReadNotifications = async (req, res) => {
+  await Notification.update(
+    { seen: true },
+    { where: { receiverId: req.user._id, seen: false } }
+  );
+  res.send({ code: 200, message: "success" });
+};
