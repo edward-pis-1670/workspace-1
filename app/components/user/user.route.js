@@ -52,6 +52,7 @@ router.post("/mark-read-notification", controller.markReadNotification);
 router.get("/mark-read-all-notification", controller.markAllReadNotifications);
 router.get("/get-all-my-courses", controller.getAllMyCourses);
 router.post("/create-course", controller.createCourse);
+router.post("/view-user", controller.viewUser);
 router.post("/take-a-course", controller.takeACourses);
 router.post("/wishlist", controller.getMyWishlist);
 router.post("/change-wishlist", controller.changeWishlist);

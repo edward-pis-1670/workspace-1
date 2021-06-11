@@ -139,7 +139,7 @@ db.courses.belongsTo(db.users, {
 
 db.users.hasMany(db.courses, {
   foreignKey: "userId",
-  as: "lecturer",
+  as: "mycourses",
 });
 
 db.genres.hasMany(db.courses, {

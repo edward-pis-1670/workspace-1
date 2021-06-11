@@ -25,7 +25,7 @@ exports.getCoursesHomepage = async (req, res) => {
     });
     courses.map((course) => {
       course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}/240_135.png`;
-      course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`
+      course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`;
     });
     genre.courses = courses;
   }
@@ -92,7 +92,7 @@ exports.getCourseByGenre = async (req, res) => {
     });
     courses.map((course) => {
       course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}/240_135.png`;
-      course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`
+      course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`;
     });
     subgenre.courses = courses;
     data.push(subgenre);
@@ -141,11 +141,11 @@ exports.getInfoCourse = async (req, res) => {
       },
     ],
   });
-  data.dataValues.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.lecturer.photo}/200_200.png`
+  data.dataValues.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.lecturer.photo}/200_200.png`;
   data.dataValues.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}/240_135.png`;
-  data.dataValues.lectures.map(lec => {
-    lec.video = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lec.video}`
-  })
+  data.dataValues.lectures.map((lec) => {
+    lec.video = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lec.video}`;
+  });
   res.json({
     code: 200,
     message: "success",
@@ -190,12 +190,12 @@ exports.getCourseBySubgenre = async (req, res) => {
           "name",
           "numberofstudent",
           "numberofreviews",
-          "_id"
+          "_id",
         ],
         include: {
           model: User,
           as: "lecturer",
-          attributes: ["_id", "username","photo"],
+          attributes: ["_id", "username", "photo"],
         },
         limit: 8,
         order: [sort],
@@ -209,7 +209,6 @@ exports.getCourseBySubgenre = async (req, res) => {
   data.subgenre.map((course) => {
     course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}/240_135.png`;
     course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`;
-    
   });
   res.json({
     code: 200,
@@ -234,9 +233,9 @@ exports.getReviews = async (req, res) => {
       attributes: ["_id", "photo", "username"],
     },
   });
-  reviews.map(review => {
-    review.dataValues.user.photo =`https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${review.user.photo}/200_200.png`
-  })
+  reviews.map((review) => {
+    review.dataValues.user.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${review.user.photo}/200_200.png`;
+  });
   res.json({
     code: 200,
     reviews: reviews,
@@ -268,10 +267,10 @@ exports.getCoursesRelatedLecturer = async (req, res) => {
       "_id",
     ],
   });
-datas.map(data => {
-  data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/240_135.png`
-  data.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.lecturer.photo}/200_200.png`
-})
+  datas.map((data) => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/240_135.png`;
+    data.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.lecturer.photo}/200_200.png`;
+  });
   res.json({
     code: 200,
     courses: datas,
@@ -306,7 +305,7 @@ exports.searchCourse = async (req, res) => {
         break;
     }
   }
-  const data = await Course.findAll({
+  const datas = await Course.findAll({
     where: condition,
     include: {
       model: User,
@@ -325,10 +324,14 @@ exports.searchCourse = async (req, res) => {
     ],
     limit: 8,
     offset: (req.body.page || 1) * 8 - 8,
-    order:[sort]
+    order: [sort],
+  });
+  datas.map((data) => {
+    data.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.coverphoto}/240_135.png`;
+    data.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.lecturer.photo}/200_200.png`;
   });
   res.json({
     code: 200,
-    courses: data,
+    courses: datas,
   });
 };

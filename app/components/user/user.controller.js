@@ -559,11 +559,14 @@ exports.deleteCourse = async (req, res) => {
 };
 
 exports.publishCourse = async (req, res) => {
-  await Course.update({ review: true }, { where: { _id: req.body.courseid } });
+  const data = await Course.update(
+    { review: true },
+    { where: { _id: req.body.courseid } }
+  );
   res.send({
     code: 200,
     message: "success",
-    course: { _id: req.body.courseid, review: true },
+    course: { _id: Number(req.body.courseid), review: true },
   });
 };
 
@@ -675,4 +678,35 @@ exports.markAllReadNotifications = async (req, res) => {
     { where: { receiverId: req.user._id, seen: false } }
   );
   res.send({ code: 200, message: "success" });
+};
+
+exports.viewUser = async (req, res) => {
+  const data = await User.findOne({
+    where: { _id: req.body.id },
+    include: {
+      model: Course,
+      as: "mycourses",
+      attributes: [
+        "cost",
+        "coverphoto",
+        "description",
+        "name",
+        "numberofreviews",
+        "numberofstudent",
+        "star",
+        "_id",
+      ],
+      include: {
+        model: User,
+        as: "lecturer",
+        attributes: ["_id", "username", "photo"],
+      },
+    },
+  });
+  data.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}/200_200.png`;
+  data.mycourses.map((course) => {
+    course.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.coverphoto}/240_135.png`;
+    course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`;
+  });
+  res.send({ code: 200, user: data });
 };
