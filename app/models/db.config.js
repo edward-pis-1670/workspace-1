@@ -27,35 +27,40 @@ db.genres = require("./genre.model.js")(sequelize, Sequelize);
 db.users = require("./user.model.js")(sequelize, Sequelize);
 db.reviews = require("./review.model.js")(sequelize, Sequelize);
 db.lectures = require("./lecture.model.js")(sequelize, Sequelize);
-db.wishlists = require("./wishlist.model")(sequelize,Sequelize)
-db.learnings = require('./user_course.model')(sequelize,Sequelize)
-db.notifications = require('./notification.model')(sequelize,Sequelize)
+db.wishlists = require("./wishlist.model")(sequelize, Sequelize);
+db.learnings = require("./user_course.model")(sequelize, Sequelize);
+db.notifications = require("./notification.model")(sequelize, Sequelize);
+db.payments = require("./payment.model")(sequelize, Sequelize);
 
+db.users.hasMany(db.payments, {
+  foreignKey: "userId",
+  as: "transactions",
+});
 
+db.payments.belongsTo(db.users, {
+  foreignKey: "userId",
+  as: "user",
+});
 
-db.notifications.belongsTo(db.users,{
+db.notifications.belongsTo(db.users, {
   foreignKey: "senderId",
-  as:"from"
-}) 
+  as: "from",
+});
 
-
-db.users.hasMany(db.notifications,{
+db.users.hasMany(db.notifications, {
   foreignKey: "senderId",
-  as:"from"
-}) 
+  as: "from",
+});
 
-
-db.notifications.belongsTo(db.users,{
+db.notifications.belongsTo(db.users, {
   foreignKey: "receiverId",
-  as:"to"
-}) 
+  as: "to",
+});
 
-
-db.users.hasMany(db.notifications,{
+db.users.hasMany(db.notifications, {
   foreignKey: "receiverId",
-  as:"to"
-}) 
-
+  as: "to",
+});
 
 db.genres.hasMany(db.subGenres, {
   foreignKey: "genreId",
@@ -76,7 +81,6 @@ db.courses.hasMany(db.lectures, {
   foreignKey: "courseId",
   as: "lectures",
 });
-
 
 db.reviews.belongsTo(db.users, {
   foreignKey: "userId",
@@ -116,20 +120,18 @@ db.courses.belongsToMany(db.users, {
   as: "mywishlist",
 });
 
-
-
 db.courses.belongsTo(db.subGenres, {
   foreignKey: "subGenreId",
   as: "subgenre",
-  ondelete:"CASCADE",
-  onupdate: "CASCADE"
+  ondelete: "CASCADE",
+  onupdate: "CASCADE",
 });
 
 db.subGenres.hasMany(db.courses, {
   foreignKey: "subGenreId",
   as: "subgenre",
-  ondelete:"CASCADE",
-  onupdate: "CASCADE"
+  ondelete: "CASCADE",
+  onupdate: "CASCADE",
 });
 
 db.courses.belongsTo(db.users, {
@@ -145,15 +147,15 @@ db.users.hasMany(db.courses, {
 db.genres.hasMany(db.courses, {
   foreignKey: "genreId",
   as: "genre",
-  ondelete:"CASCADE",
-  onupdate: "CASCADE"
+  ondelete: "CASCADE",
+  onupdate: "CASCADE",
 });
 
 db.courses.belongsTo(db.genres, {
   foreignKey: "genreId",
   as: "genre",
-  ondelete:"CASCADE",
-  onupdate: "CASCADE"
+  ondelete: "CASCADE",
+  onupdate: "CASCADE",
 });
 
 db.courses.hasMany(db.reviews, {

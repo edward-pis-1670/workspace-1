@@ -5,12 +5,10 @@ const Wishlist = db.wishlists;
 const Lecture = db.lectures;
 const Review = db.reviews;
 const Notification = db.notifications;
+const Payment = db.payments;
 const Learning = db.learnings;
-const uuid = require("uuid");
-const uuidv1 = uuid.v1;
 const fs = require("fs");
-const { Op, Sequelize } = require("sequelize");
-const { format } = require("util");
+const { Op, sequelize, Sequelize } = require("sequelize");
 const upload = require("../../services/googleStorage.service");
 const sharp = require("sharp");
 
@@ -447,7 +445,7 @@ exports.changePreview = async (req, res) => {
   return res.send({
     code: 200,
     message: "success",
-    lecture: { _id: req.body.lectureid, preview: data.preview },
+    lecture: { _id: Number(req.body.lectureid), preview: data.preview },
   });
 };
 
@@ -709,4 +707,64 @@ exports.viewUser = async (req, res) => {
     course.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${course.lecturer.photo}/200_200.png`;
   });
   res.send({ code: 200, user: data });
+};
+
+exports.getPaymentByUser = async (req, res) => {
+  const data = await Payment.findAll({
+    where: { userId: req.user._id },
+    include: { model: User, as: "user", attributes: ["username", "_id"] },
+    limit: 8,
+    order: [["createdAt", req.body.sort == 0 ? "DESC" : "ASC"]],
+    offset: (req.body.page || 1) * 8 - 8,
+  });
+  res.send({ code: 200, payments: data });
+};
+
+exports.depositFunds = async (req, res) => {
+  await User.increment(
+    { creditbalance: req.body.money },
+    { where: { _id: req.user._id } }
+  );
+  await Payment.create({
+    type: 1,
+    money: req.body.money,
+    userId: req.user._id,
+  });
+  res.send({ code: 200, message: "success" });
+};
+
+exports.withDrawMoney = async (req, res) => {
+  const data = await User.findOne({ where: { _id: req.user._id } });
+  if (!data.dataValues.paypalid || data.dataValues.paypalid == "") {
+    return res.send({ code: 404, message: "You must set your PayPal-Id" });
+  }
+  if (data.dataValues.creditbalance < req.body.money) {
+    return res.send({
+      code: 404,
+      message: "The credit balance is not enough to make payments",
+    });
+  }
+  await User.increment(
+    { creditbalance: -req.body.money },
+    { where: { _id: req.user._id } }
+  );
+  await Payment.create({
+    userId: req.user._id,
+    type: 0,
+    money: req.body.money,
+  });
+  res.send({ code: 200, message: "success" });
+};
+
+exports.setPaypalId = async (req, res, next) => {
+  await User.update(
+    { paypalid: req.body.paypalid },
+    { where: { _id: req.user._id } }
+  );
+  res.send({ code: 200, message: "success" });
+};
+
+exports.deletePayment = async (req, res, next) => {
+  await Payment.destroy({ where: { _id: req.body._id } });
+  res.send({ code: 200, message: "success" });
 };

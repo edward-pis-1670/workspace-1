@@ -4,8 +4,10 @@ const Course = db.courses;
 const Genre = db.genres;
 const Subgenre = db.subGenres;
 const Lecture = db.lectures;
+const Payment = db.payments;
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
+const fs = require("fs");
 
 exports.getCourseByAdmin = async (req, res, next) => {
   let condition = {};
@@ -167,5 +169,61 @@ exports.refuseCourse = async (req, res) => {
     { review: false, public: false },
     { where: { _id: req.body._id } }
   );
+  res.send({ code: 200, message: "success" });
+};
+
+exports.deleteCourseByAdmin = async (req, res) => {
+  await Course.destroy({ where: { _id: req.body._id } });
+  res.send({ code: 200, message: "success" });
+};
+
+exports.getConfig = async (req, res) => {
+  fs.readFile("config.json", (err, data) => {
+    if (err) res.send({ code: 404 });
+    let config = JSON.parse(data.toString());
+    res.send({
+      code: 200,
+      cardnumber: config.CARD_NUMBER,
+      totalprofit: config.TOTAL_PROFIT,
+      profitratio: config.PROFIT_RATIO,
+    });
+  });
+};
+
+exports.setCardNumber = async (req, res) => {
+  fs.readFile("config.json", (err, data) => {
+    if (err) res.send({ code: 404 });
+    let config = JSON.parse(data.toString());
+    config.CARD_NUMBER = req.body.cardnumber;
+    fs.writeFile("config.json", JSON.stringify(config), (err) => {
+      res.send({ code: 200, cardnumber: req.body.cardnumber });
+    });
+  });
+};
+
+exports.setProfitRatio = async (req, res) => {
+  fs.readFile("config.json", (err, data) => {
+    if (err) res.send({ code: 404 });
+    let config = JSON.parse(data.toString());
+    config.PROFIT_RATIO = parseFloat(req.body.profitratio);
+    fs.writeFile("config.json", JSON.stringify(config), (err) => {
+      res.send({ code: 200, profitratio: req.body.profitratio });
+    });
+  });
+};
+
+exports.getPaymentByAdmin = async (req, res) => {
+  const data = await Payment.findAll({
+    where: { userId: req.user._id },
+    include: { model: User, as: "user", attributes: ["username", "_id"] },
+    limit: 8,
+    order: [["createdAt", req.body.sort == 0 ? "DESC" : "ASC"]],
+    offset: (req.body.page || 1) * 8 - 8,
+  });
+  res.send({ code: 200, payments: data });
+};
+
+exports.deletePaymentByAdmin = async (req, res) => {
+  await Payment.destroy({ where: { _id: req.body._id } });
   res.send({ code: 200, message: "success" });
 };

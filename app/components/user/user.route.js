@@ -32,8 +32,6 @@ const uploadavatar = multer({
   },
 });
 
-
-
 const catchError = async (func) => {
   return async (req, res, next) => {
     try {
@@ -63,6 +61,11 @@ router.post("/get-lectures-course", controller.getCourseLectures);
 router.post("/add-video-lecture", controller.addVideoLectures);
 router.post("/set-name-lecture", controller.setNameLecture);
 router.post("/change-preview-lecture", controller.changePreview);
+router.post("/get-payment-by-user", controller.getPaymentByUser);
+router.post("/deposit-funds", controller.depositFunds);
+router.post("/withdraw-money", controller.withDrawMoney);
+router.post("/set-paypalid", controller.setPaypalId);
+router.post("/delete-payment", controller.deletePayment);
 
 router.post(
   "/upload-previewvideo-lecture",
@@ -85,6 +88,10 @@ router.post("/delete-course", controller.deleteCourse);
 router.post("/delete-video-lectures", controller.deleteVideoLectures);
 router.post("/publish-course", controller.publishCourse);
 router.post("/edit-profile", controller.editProfile);
-router.post("/edit-avatar", uploadavatar.single("avatar"),controller.editAvatar);
+router.post(
+  "/edit-avatar",
+  uploadavatar.single("avatar"),
+  controller.editAvatar
+);
 
 module.exports = router;

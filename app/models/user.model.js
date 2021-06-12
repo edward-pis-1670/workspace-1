@@ -64,6 +64,10 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: true,
     },
+    paypalid: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
   });
   return user;
 };

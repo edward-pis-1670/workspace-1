@@ -4,7 +4,7 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const route = require("./app/components/index");
-const morgan = require('morgan')
+const morgan = require("morgan");
 app.use(cors({ origin: "*" }));
 app.use(morgan("dev"));
 app.use(bodyParser.json());
