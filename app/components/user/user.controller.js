@@ -1,5 +1,7 @@
 const db = require("../../models/db.config");
 const User = db.users;
+const Genre = db.genres;
+const Subgenre = db.subGenres;
 const Course = db.courses;
 const Wishlist = db.wishlists;
 const Lecture = db.lectures;
@@ -8,7 +10,8 @@ const Notification = db.notifications;
 const Payment = db.payments;
 const Learning = db.learnings;
 const fs = require("fs");
-const { Op, sequelize, Sequelize } = require("sequelize");
+const { Op } = require("sequelize");
+const sequelize = require("sequelize");
 const upload = require("../../services/googleStorage.service");
 const sharp = require("sharp");
 
@@ -130,72 +133,84 @@ exports.createCourse = async (req, res) => {
     subGenreId: null,
   });
   await newCourse.save();
-  res.send({ code: 200, message: "success", course: newCourse });
+  res.send({
+    code: 200,
+    message: "success",
+    course: {
+      ...newCourse.dataValues,
+      coverphoto: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${newCourse.dataValues.coverphoto}/130_73.png`,
+    },
+  });
 };
 
 exports.takeACourses = async (req, res) => {
-  const courseIdfound = await Learning.findAll({
-    where: { userId: req.user._id },
+  const result = await Learning.findOne({
+    where: { courseId: Number(req.body.courseid), userId: req.user._id },
   });
-  const result = courseIdfound.filter((element) => {
-    return (element.dataValues.courseId = req.body.courseid);
-  });
-  if (!result) {
+  if (result) {
     return res.send({ code: 404, message: "error" });
-  } else {
-    await Course.findOne({
-      where: { _id: req.body.courseid },
-    })
-      .then(async (course) => {
-        if (!course) return res.send({ code: 404, message: "error" });
-        if (req.user.creditbalance < course.cost) {
-          return res.send({
-            code: 404,
-            message: "The credit balance is not enough to make payments",
-          });
-        }
-        await Learning.create({
-          userId: req.user._id,
-          courseId: req.body.courseid,
-        })
-          .then((u) => console.log(u))
-          .catch((err) => console.log(err));
-        User.increment(
-          { creditbalance: -course.cost },
-          { where: { _id: req.user._id } }
-        );
-        fs.readFile("config.json", async (err, data) => {
-          if (err) {
-            console.log(err);
-          }
-          let config = JSON.parse(data.toString());
-          User.increment({
-            creditbalance:
-              (course.cost * (100.0 - parseFloat(config.PROFIT_RATIO))) / 100.0,
-          });
-          config.TOTAL_PROFIT =
-            parseFloat(config.TOTAL_PROFIT) +
-            (course.cost * parseFloat(config.PROFIT_RATIO)) / 100.0;
-          fs.writeFile("config.json", JSON.stringify(config), (err) => {});
-          await Notification.create({
-            senderId: req.user._id,
-            receiverId: course.lecturer._id,
-            title: "Conratulation",
-            message:
-              user.username + " has enrolled in " + course.name + " course",
-            url: "/managecourse/" + req.body.courseid + "/goals",
-          });
-          Course.increment(
-            { numberofstudent: 1, revenue: course.cost },
-            { where: { _id: req.body.courseid } }
-          );
-        });
-        res.send({ code: 200, message: "success" });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   }
+  const [course, user] = await Promise.all([
+    Course.findOne({
+      where: { _id: Number(req.body.courseid) },
+    }),
+    User.findOne({ _id: req.user._id }),
+  ]);
+  if (!course) {
+    return res.send({ code: 404, message: "error" });
+  }
+  if (user.creditbalance < course.cost) {
+    return res.send({
+      code: 404,
+      message: "The credit balance is not enough to make payments",
+    });
+  }
+
+  const config = await new Promise((resolve, reject) => {
+    fs.readFile("config.json", async (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(JSON.parse(data.toString()));
+    });
+  });
+
+  await Promise.all([
+    Learning.create({
+      userId: req.user._id,
+      courseId: Number(req.body.courseid),
+    }),
+    User.update(
+      { creditbalance: sequelize.literal(`creditbalance - ${course.cost}`) },
+      { where: { _id: req.user._id } }
+    ),
+    User.update(
+      {
+        creditbalance: sequelize.literal(
+          `creditbalance + ${(course.cost * (100 - config.PROFIT_RATIO)) / 100}`
+        ),
+      },
+      { where: { _id: course.userId } }
+    ),
+  ]);
+
+  res.send({ code: 200, message: "success" });
+
+  Course.update(
+    { numberofstudent: sequelize.literal("numberofstudent + 1") },
+    { where: { _id: Number(req.body.courseid) } }
+  );
+  Notification.create({
+    senderId: req.user._id,
+    receiverId: course.userId,
+    title: "Conratulation",
+    message: user.username + " has enrolled in " + course.name + " course",
+    url: "/managecourse/" + req.body.courseid + "/goals",
+  });
+  config.TOTAL_PROFIT =
+    parseFloat(config.TOTAL_PROFIT) +
+    (course.cost * parseFloat(config.PROFIT_RATIO)) / 100.0;
+  fs.writeFile("config.json", JSON.stringify(config), (err) => {});
 };
 
 exports.getMyWishlist = async (req, res) => {
@@ -767,4 +782,59 @@ exports.setPaypalId = async (req, res, next) => {
 exports.deletePayment = async (req, res, next) => {
   await Payment.destroy({ where: { _id: req.body._id } });
   res.send({ code: 200, message: "success" });
+};
+
+exports.getInfoCourse = async (req, res) => {
+  const isLearning = await Learning.findOne({
+    where: { userId: req.user._id, courseId: Number(req.body.courseid) },
+  });
+  if (!isLearning) {
+    return res.send({ code: 400 });
+  }
+  const data = await Course.findOne({
+    where: {
+      _id: req.body.courseid,
+    },
+    include: [
+      {
+        model: Subgenre,
+        as: "subgenre",
+        attributes: ["_id", "name"],
+      },
+      {
+        model: User,
+        as: "lecturer",
+        attributes: [
+          "photo",
+          "_id",
+          "username",
+          "biography",
+          "linkedin",
+          "twitter",
+          "website",
+          "youtube",
+        ],
+      },
+      {
+        model: Genre,
+        as: "genre",
+        attributes: ["_id", "name"],
+      },
+      {
+        model: Lecture,
+        as: "lectures",
+        attributes: ["_id", "preview", "video", "name"],
+      },
+    ],
+  });
+  data.dataValues.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.lecturer.photo}/200_200.png`;
+  data.dataValues.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}/240_135.png`;
+  data.dataValues.lectures.map((lec) => {
+    lec.video = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lec.video}`;
+  });
+  res.json({
+    code: 200,
+    message: "success",
+    course: data,
+  });
 };

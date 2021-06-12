@@ -57,7 +57,7 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING,
     },
     creditbalance: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.FLOAT,
       defaultValue: 0,
     },
     verifyToken: {

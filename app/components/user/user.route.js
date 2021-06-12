@@ -66,6 +66,7 @@ router.post("/deposit-funds", controller.depositFunds);
 router.post("/withdraw-money", controller.withDrawMoney);
 router.post("/set-paypalid", controller.setPaypalId);
 router.post("/delete-payment", controller.deletePayment);
+router.post("/get-info-course", controller.getInfoCourse);
 
 router.post(
   "/upload-previewvideo-lecture",
