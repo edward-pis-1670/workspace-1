@@ -145,6 +145,7 @@ exports.getInfoCourse = async (req, res) => {
   });
   data.dataValues.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.lecturer.photo}/200_200.png`;
   data.dataValues.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}/240_135.png`;
+  data.dataValues.previewvideo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.previewvideo}`;
   data.dataValues.lectures.map((lec) => {
     lec.video = lec.preview
       ? `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lec.video}`

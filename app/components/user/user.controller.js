@@ -671,18 +671,19 @@ exports.editAvatar = async (req, res) => {
         });
     });
   }
+
+  const data = await User.findOne({ where: { _id: req.user._id } });
+  res.send({
+    code: 200,
+    message: "success",
+    photo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}/200_200.png`,
+  });
   await User.update(
     {
       photo: avatar,
     },
     { where: { _id: req.user._id } }
   );
-  const data = await User.findOne({ where: { _id: req.user._id } });
-  return res.send({
-    code: 200,
-    message: "success",
-    photo: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.photo}/200_200.png`,
-  });
 };
 
 exports.markAllReadNotifications = async (req, res) => {
@@ -828,6 +829,7 @@ exports.getInfoCourse = async (req, res) => {
     ],
   });
   data.dataValues.lecturer.photo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.lecturer.photo}/200_200.png`;
+  data.dataValues.previewvideo = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.previewvideo}`;
   data.dataValues.coverphoto = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${data.dataValues.coverphoto}/240_135.png`;
   data.dataValues.lectures.map((lec) => {
     lec.video = `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}/${lec.video}`;
