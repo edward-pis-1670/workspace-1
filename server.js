@@ -5,6 +5,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const route = require("./app/components/index");
 const morgan = require("morgan");
+const passport = require("passport");
 app.use(cors({ origin: "*" }));
 app.use(morgan("dev"));
 app.use(bodyParser.json());
