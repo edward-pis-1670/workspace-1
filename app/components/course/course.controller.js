@@ -159,6 +159,10 @@ exports.getInfoCourse = async (req, res) => {
 };
 
 exports.getCourseBySubgenre = async (req, res) => {
+  let condition = { public: true };
+  if (req.body.level) condition.level = req.body.level;
+  if (req.body.free)
+    condition.cost = req.body.free == "true" ? 0 : { [Op.gt]: 0 };
   let sort;
   if (!req.body.sort) sort = ["numberofstudent", "DESC"];
   else {
@@ -187,7 +191,7 @@ exports.getCourseBySubgenre = async (req, res) => {
     include: [
       {
         model: Course,
-        where: { public: true },
+        where: condition,
         as: "subgenre",
         attributes: [
           "cost",
@@ -197,6 +201,7 @@ exports.getCourseBySubgenre = async (req, res) => {
           "numberofstudent",
           "numberofreviews",
           "_id",
+          "createdAt",
         ],
         include: {
           model: User,
