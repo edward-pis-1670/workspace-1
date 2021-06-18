@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "dotenv": "^9.0.1",
     "express": "^4.17.1",
+    "generate-password": "^1.6.0",
     "googleapis": "^76.0.0",
     "jsonwebtoken": "^8.5.1",
     "local-storage": "^2.0.0",

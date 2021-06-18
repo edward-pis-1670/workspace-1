@@ -5,7 +5,8 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const { google } = require("googleapis");
 const axios = require("axios");
-const queryString = require("query-string");
+// const queryString = require("query-string");
+const generator = require("generate-password");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -124,6 +125,15 @@ exports.logout = (req, res) => {
 };
 
 exports.forgotPassword = async (req, res, next) => {
+  let newPassword = generator.generate({
+    length: 10,
+    numbers: true,
+  });
+
+  await User.update(
+    { password: bcrypt.hashSync(newPassword, 8), verified: true },
+    { where: { email: req.body.email } }
+  );
   const account = await User.findOne({ where: { email: req.body.email } });
   if (account.verified == true) {
     let mainOptions = {
@@ -136,36 +146,21 @@ exports.forgotPassword = async (req, res, next) => {
         account.username +
         ",</p></br>" +
         "<p>A password reset for your account was requested.</p></br>" +
-        "<p>Please check your email to reset password: <strong>" +
-        "<a href='http://localhost:5000/auth/reset-password/" +
-        account.verifyToken +
-        "'>Reset password Now ></a>" +
+        "<p>Please login your account with new password: <strong>" +
+        newPassword +
         "</strong></p></br></br>" +
         "<p>Academy Support</p>",
     };
     transporter.sendMail(mainOptions, (err, info) => {
       if (err) {
-        console.log(err);
-        return;
+        return res.send({ code: 404, message: "error" });
       }
-      console.log(info.response);
+      return res.send({
+        code: 200,
+        message:
+          "You should soon receive an email allowing you to reset your password. Please make sure to check your spam and trash if you can not find the email.",
+      });
     });
-  } else {
-    res.json("Unauthorize");
-  }
-  res.json("Please check your email");
-};
-
-exports.resetPassword = async (req, res) => {
-  const account = await User.findOne({
-    where: { verifyToken: req.params.verifyToken },
-  });
-  if (account) {
-    account.password = bcrypt.hashSync(req.body.password, 8);
-    account
-      .save()
-      .then(() => res.json("Change password successfully"))
-      .catch((err) => console.log(err));
   }
 };
 
