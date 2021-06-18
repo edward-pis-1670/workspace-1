@@ -181,12 +181,9 @@ exports.getUrlGoogle = async (req, res, next) => {
   ];
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline",
-    prompt: "consent", // access type and approval prompt will force a new refresh token to be made each time signs in
+    prompt: "consent",
     scope: defaultScope,
   });
-  // const { tokens } = await oauth2Client.getToken(code);
-  // oauth2Client.setCredentials(tokens);
-  // console.log(tokens);
   res.redirect(url);
 };
 
@@ -208,31 +205,40 @@ exports.callback = async (req, res) => {
       },
     }
   );
-  const userWithEmail = await User.findOne({
-    where: { email: googleUser.data.email },
+  const userWithGoogleId = await User.findOne({
+    where: { googleid: googleUser.data.id },
   });
-  if (!userWithEmail) {
-    await User.create({
-      googleid: String(googleUser.data.id),
-      username: googleUser.data.name,
-      email: googleUser.data.email,
-      verified: true,
+  if (!userWithGoogleId) {
+    const userWithEmail = await User.findOne({
+      where: { email: googleUser.data.email },
     });
-    const user = await User.findOne({
-      where: { googleid: String(googleUser.data.id) },
-    });
-    const jwtToken = jwt.sign(
-      {
-        _id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET
-    );
-    await User.update(
-      { verifyToken: jwtToken },
-      { where: { googleid: String(user.googleid) } }
-    );
+    if (!userWithEmail) {
+      await User.create({
+        googleid: String(googleUser.data.id),
+        username: googleUser.data.name,
+        email: googleUser.data.email,
+        verified: true,
+      });
+      const user = await User.findOne({
+        where: { googleid: String(googleUser.data.id) },
+      });
+      const jwtToken = jwt.sign(
+        {
+          _id: user._id,
+          email: user.email,
+          role: user.role,
+        },
+        process.env.JWT_SECRET
+      );
+      await User.update(
+        { verifyToken: jwtToken },
+        { where: { googleid: String(user.googleid) } }
+      );
+    } else {
+      await userWithEmail.update({ googleid: String(googleUser.data.id) });
+    }
+  } else {
+    console.log(userWithGoogleId);
     res.redirect("http://localhost:3001/");
   }
 };
@@ -297,8 +303,31 @@ exports.facebookSuccess = async (req, res) => {
   let { data } = await axios.get(authUrl);
   let accessUrl = `https://graph.facebook.com/v11.0/me?fields=id,name,email,birthday&access_token=${data.access_token}`;
   let info = await axios.get(accessUrl);
-  console.log(info.data);
-  // let { info } = await axios.get(accessUrl);
-  // console.log(info);
+  const userWithFacebookId = await User.findOne({
+    where: { facebookid: info.data.id },
+  });
+  if (!userWithFacebookId) {
+    await User.create({
+      facebookid: String(info.data.id),
+      username: info.data.name,
+      email: info.data.email,
+      verified: true,
+    });
+    const user = await User.findOne({
+      where: { facebookid: String(info.data.id) },
+    });
+    const jwtToken = jwt.sign(
+      {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET
+    );
+    await User.update(
+      { verifyToken: jwtToken },
+      { where: { facebookid: String(user.facebookid) } }
+    );
+  }
   res.send("success");
 };
