@@ -237,92 +237,44 @@ exports.callback = async (req, res) => {
     res.redirect("http://localhost:3001/");
   }
 };
-// passport.serializeUser((user, done) => {
-//   done(null, user);
-// });
-
-// passport.deserializeUser((obj, done) => {
-//   done(null, obj);
-// });
-
-// passport.use(
-//   new FacebookStrategy(
-//     {
-//       clientID: process.env.FACEBOOK_APP_ID,
-//       clientSecret: process.env.FACEBOOK_APP_SECRET,
-//       callbackURL: process.env.FACEBOOK_REDIRECT_URL,
-//       profileFields: ["email", "name", "id", "displayName"],
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//       await User.create(
-//         {
-//           facebookid: String(profile.id),
-//           username: profile.displayName,
-//           email: profile.emails[0].value,
-//           verified: true,
-//         },
-//         function (err, user) {
-//           if (err) {
-//             return done(err);
-//           }
-//           done(null, user);
-//         }
-//       );
-//     }
-//   )
-// );
-exports.getUrlFacebook = async (req, res) => {
-  const client_id = process.env.FACEBOOK_APP_ID;
-  const redirect_uri = process.env.FACEBOOK_REDIRECT_URL;
-  // const scope = ["email", "name", "user_birthday", "displayName"].join(","),
-  // const stringifiedParams = queryString.stringify({
-  //   client_id: process.env.FACEBOOK_APP_ID,
-  //   redirect_uri: process.env.FACEBOOK_REDIRECT_URL,
-  //   scope: ["email", "name", "user_birthday", "displayName"].join(","),
-  //   auth_type: "rerequest",
-  // });
-  // const facebookLoginUrl = `https://www.facebook.com/v11.0/dialog/oauth?${stringifiedParams}`;
-  const facebookLoginUrl = `https://www.facebook.com/v11.0/dialog/oauth?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=public_profile, email, user_likes, user_birthday&auth_type=rerequest`;
-  res.redirect(facebookLoginUrl);
-};
 
 exports.facebookSuccess = async (req, res) => {
-  const code = req.query.code;
-  const authUrl = `https://graph.facebook.com/v11.0/oauth/access_token?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${process.env.FACEBOOK_REDIRECT_URL}&client_secret=${process.env.FACEBOOK_APP_SECRET}&code=${code}`;
-  // await axios.get(authUrl).then(async (data) => {
-  //   const accessUrl = `https://graph.facebook.com/v11.0/me?fields=id,name,email,birthday&access_token=${data.data.access_token}`;
-  //   await axios.get(accessUrl).then((info) => {
-  //     console.log(info.data);
-  //   });
-  // });
-  let { data } = await axios.get(authUrl);
-  let accessUrl = `https://graph.facebook.com/v11.0/me?fields=id,name,email,birthday&access_token=${data.access_token}`;
-  let info = await axios.get(accessUrl);
-  const userWithFacebookId = await User.findOne({
-    where: { facebookid: info.data.id },
-  });
-  if (!userWithFacebookId) {
-    await User.create({
-      facebookid: String(info.data.id),
-      username: info.data.name,
-      email: info.data.email,
-      verified: true,
-    });
-    const user = await User.findOne({
+  const accessToken = req.body.accessToken;
+  const responseCheckToken = await axios.get(
+    `https://graph.facebook.com/v11.0/debug_token?input_token=${accessToken}&access_token=${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`
+  );
+  if (
+    responseCheckToken.data &&
+    responseCheckToken.data.data &&
+    responseCheckToken.data.data.app_id &&
+    responseCheckToken.data.data.app_id == process.env.FACEBOOK_APP_ID
+  ) {
+    let accessUrl = `https://graph.facebook.com/v11.0/me?fields=id,name&access_token=${accessToken}`;
+    let info = await axios.get(accessUrl);
+    let userWithFacebookId = await User.findOne({
       where: { facebookid: String(info.data.id) },
     });
+    if (!userWithFacebookId) {
+      await User.create({
+        facebookid: String(info.data.id),
+        username: info.data.name,
+        verified: true,
+      });
+      userWithFacebookId = await User.findOne({
+        where: { facebookid: String(info.data.id) },
+      });
+    }
     const jwtToken = jwt.sign(
       {
-        _id: user._id,
-        email: user.email,
-        role: user.role,
+        _id: userWithFacebookId.dataValues._id,
+        role: userWithFacebookId.dataValues.role,
       },
       process.env.JWT_SECRET
     );
-    await User.update(
-      { verifyToken: jwtToken },
-      { where: { facebookid: String(user.facebookid) } }
-    );
+    res.send({
+      code: 200,
+      token: jwtToken,
+      user: userWithFacebookId.dataValues,
+    });
   }
-  res.send("success");
 };
