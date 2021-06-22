@@ -164,39 +164,32 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-exports.getUrlGoogle = async (req, res, next) => {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URL
-  );
-  const defaultScope = [
-    "https://www.googleapis.com/auth/userinfo.profile",
-    "https://www.googleapis.com/auth/userinfo.email",
-  ];
-  const url = oauth2Client.generateAuthUrl({
-    access_type: "offline",
-    prompt: "consent",
-    scope: defaultScope,
-  });
-  res.redirect(url);
-};
+// exports.getUrlGoogle = async (req, res, next) => {
+//   const oauth2Client = new google.auth.OAuth2(
+//     process.env.GOOGLE_CLIENT_ID,
+//     process.env.GOOGLE_CLIENT_SECRET,
+//     process.env.GOOGLE_REDIRECT_URL
+//   );
+//   const defaultScope = [
+//     "https://www.googleapis.com/auth/userinfo.profile",
+//     "https://www.googleapis.com/auth/userinfo.email",
+//   ];
+//   const url = oauth2Client.generateAuthUrl({
+//     access_type: "offline",
+//     prompt: "consent",
+//     scope: defaultScope,
+//   });
+//   res.redirect(url);
+// };
 
 exports.callback = async (req, res) => {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URL
-  );
-  const code = req.query.code;
-  const { tokens } = await oauth2Client.getToken(code);
-  oauth2Client.setCredentials(tokens);
-  // console.log(tokens);
+  let token = req.body.accessToken;
+
   const googleUser = await axios.get(
-    `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`,
+    `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`,
     {
       headers: {
-        Authorization: `Bearer ${tokens.id_token}`,
+        Authorization: `Bearer ${token}`,
       },
     }
   );
@@ -204,38 +197,24 @@ exports.callback = async (req, res) => {
     where: { googleid: googleUser.data.id },
   });
   if (!userWithGoogleId) {
-    const userWithEmail = await User.findOne({
-      where: { email: googleUser.data.email },
+    await User.create({
+      googleid: String(googleUser.data.id),
+      username: googleUser.data.name,
+      verified: true,
     });
-    if (!userWithEmail) {
-      await User.create({
-        googleid: String(googleUser.data.id),
-        username: googleUser.data.name,
-        email: googleUser.data.email,
-        verified: true,
-      });
-      const user = await User.findOne({
-        where: { googleid: String(googleUser.data.id) },
-      });
-      const jwtToken = jwt.sign(
-        {
-          _id: user._id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET
-      );
-      await User.update(
-        { verifyToken: jwtToken },
-        { where: { googleid: String(user.googleid) } }
-      );
-    } else {
-      await userWithEmail.update({ googleid: String(googleUser.data.id) });
-    }
-  } else {
-    console.log(userWithGoogleId);
-    res.redirect("http://localhost:3001/");
   }
+  const jwtToken = jwt.sign(
+    {
+      _id: userWithGoogleId._id,
+      role: userWithGoogleId.role,
+    },
+    process.env.JWT_SECRET
+  );
+  res.send({
+    code: 200,
+    token: jwtToken,
+    user: userWithGoogleId.dataValues,
+  });
 };
 
 exports.facebookSuccess = async (req, res) => {
