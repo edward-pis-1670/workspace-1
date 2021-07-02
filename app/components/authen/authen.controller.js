@@ -182,7 +182,7 @@ exports.forgotPassword = async (req, res, next) => {
 //   res.redirect(url);
 // };
 
-exports.callback = async (req, res) => {
+exports.loginGoogle = async (req, res) => {
   let token = req.body.accessToken;
 
   const googleUser = await axios.get(
@@ -217,7 +217,7 @@ exports.callback = async (req, res) => {
   });
 };
 
-exports.facebookSuccess = async (req, res) => {
+exports.loginFacebook = async (req, res) => {
   const accessToken = req.body.accessToken;
   const responseCheckToken = await axios.get(
     `https://graph.facebook.com/v11.0/debug_token?input_token=${accessToken}&access_token=${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`

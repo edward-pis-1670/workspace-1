@@ -8,7 +8,7 @@ router.post("/login", controller.login);
 router.get("/logout", controller.logout);
 router.post("/forgot-password", controller.forgotPassword);
 // router.get("/google", controller.getUrlGoogle);
-router.post("/google", controller.callback);
-router.post("/facebook", controller.facebookSuccess);
+router.post("/google", controller.loginGoogle);
+router.post("/facebook", controller.loginFacebook);
 
 module.exports = router;

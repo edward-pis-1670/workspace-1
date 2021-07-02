@@ -39,7 +39,7 @@ exports.getMe = async (req, res) => {
   const notis = await Notification.findAll({
     where: { receiverId: req.user._id },
     include: { model: User, as: "from", attributes: ["photo", "_id"] },
-
+    order:[['createdAt', 'DESC']],
     limit: 4,
   });
   notis.map((noti) => {
@@ -623,6 +623,7 @@ exports.getNotification = async (req, res) => {
   const datas = await Notification.findAll({
     where: { receiverId: req.user._id },
     include: { model: User, as: "from", attributes: ["photo", "_id"] },
+    order:[['createdAt', 'DESC']],
     limit: 4,
     offset: (req.body.page || 1) * 4 - 4,
   });
