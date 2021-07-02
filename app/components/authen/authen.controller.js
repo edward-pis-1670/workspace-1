@@ -193,7 +193,7 @@ exports.loginGoogle = async (req, res) => {
       },
     }
   );
-  const userWithGoogleId = await User.findOne({
+  let userWithGoogleId = await User.findOne({
     where: { googleid: googleUser.data.id },
   });
   if (!userWithGoogleId) {
@@ -201,6 +201,9 @@ exports.loginGoogle = async (req, res) => {
       googleid: String(googleUser.data.id),
       username: googleUser.data.name,
       verified: true,
+    });
+    userWithGoogleId = await User.findOne({
+      where: { googleid: String(googleUser.data.id) },
     });
   }
   const jwtToken = jwt.sign(
